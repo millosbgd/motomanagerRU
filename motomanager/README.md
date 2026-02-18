@@ -77,7 +77,7 @@ dotnet add MotoManager.Infrastructure package Microsoft.EntityFrameworkCore.Desi
 
 dotnet add MotoManager.Infrastructure package Npgsql.EntityFrameworkCore.PostgreSQL
 
-dotnet add MotoManager.Infrastructure package Npgsql.EntityFrameworkCore.PostgreSQL.NamingConventions
+dotnet add MotoManager.Infrastructure package EFCore.NamingConventions
 
 dotnet add MotoManager.Api package Microsoft.EntityFrameworkCore.Design
 
