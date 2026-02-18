@@ -12,8 +12,8 @@ Production-ready MVP monorepo.
 
 ### 2) Backend (Render)
 1. Kreiraj novi Web Service (Linux) iz repo-a.
-2. Root dir: `motomanager/backend/MotoManager.Api`
-3. Language: **Docker** (koristi Dockerfile iz Api foldera)
+2. Root dir: `motomanager/backend`
+3. Language: **Docker** (koristi Dockerfile iz backend foldera)
 4. Dodaj env vars:
 	- `ConnectionStrings__Default`
 	- `AllowedOrigins__0` = Vercel URL (npr. https://motomanager.vercel.app)
