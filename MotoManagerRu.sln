@@ -1,0 +1,32 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "motomanager", "motomanager", "{594B9B76-AC32-595E-6579-B30750CBAD8B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{8C865646-F1E7-CF1B-1244-21A21ADCD22F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotoManager.Domain", "motomanager\backend\MotoManager.Domain\MotoManager.Domain.csproj", "{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C865646-F1E7-CF1B-1244-21A21ADCD22F} = {594B9B76-AC32-595E-6579-B30750CBAD8B}
+		{1ACFC1B6-2389-3E5D-5B76-990B8E6B3759} = {8C865646-F1E7-CF1B-1244-21A21ADCD22F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A3A8B402-D07C-4098-8F8B-EAE81599ECDC}
+	EndGlobalSection
+EndGlobal

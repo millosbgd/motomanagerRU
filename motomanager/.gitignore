@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# EF Core
+Migrations/
+
+# Node/Angular
+node_modules/
+dist/
+.angular/
+.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

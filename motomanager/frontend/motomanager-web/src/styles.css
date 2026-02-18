@@ -1,0 +1,10 @@
+* { box-sizing: border-box; }
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7; }
+nav { background: #0f172a; padding: 12px 20px; color: #fff; display: flex; gap: 12px; }
+nav a { color: #fff; text-decoration: none; font-weight: 600; }
+main { padding: 20px; }
+.card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+input, select, button { padding: 8px; margin: 4px 0; }
+button { cursor: pointer; }
+.list { display: grid; gap: 8px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
