@@ -5,5 +5,6 @@ public record UpdateVehicleRequest(
     string Make,
     string Model,
     int? Year,
-    bool IsActive
+    bool IsActive,
+    long? ClientId
 );

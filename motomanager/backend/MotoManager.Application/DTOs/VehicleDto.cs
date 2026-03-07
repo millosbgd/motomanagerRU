@@ -7,6 +7,8 @@ public record VehicleDto(
     string Model,
     int? Year,
     bool IsActive,
+    long? ClientId,
+    string? ClientName,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
 );

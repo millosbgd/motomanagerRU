@@ -5,6 +5,8 @@ export interface Vehicle {
   model: string;
   year?: number;
   isActive: boolean;
+  clientId?: number;
+  clientName?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,6 +16,7 @@ export interface CreateVehicleRequest {
   make: string;
   model: string;
   year?: number;
+  clientId?: number;
 }
 
 export interface UpdateVehicleRequest {
@@ -22,4 +25,5 @@ export interface UpdateVehicleRequest {
   model: string;
   year?: number;
   isActive: boolean;
+  clientId?: number;
 }

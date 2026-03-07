@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
 import { Vehicle } from '../models/vehicle';
+import { Client } from '../models/client';
 
 @Component({
   standalone: true,
@@ -37,13 +38,14 @@ import { Vehicle } from '../models/vehicle';
             <th>Marka</th>
             <th>Model</th>
             <th>Godina</th>
+            <th>Klijent</th>
             <th>Status</th>
             <th>Akcije</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="vehicles.length === 0" class="empty-row">
-            <td colspan="7">
+            <td colspan="8">
               <i class="pi pi-car" style="font-size:24px; color:#334155; display:block; margin-bottom:8px;"></i>
               Nema vozila. Dodaj prvo vozilo.
             </td>
@@ -54,6 +56,7 @@ import { Vehicle } from '../models/vehicle';
             <td>{{ v.make }}</td>
             <td>{{ v.model }}</td>
             <td>{{ v.year ?? '—' }}</td>
+            <td>{{ v.clientName ?? '—' }}</td>
             <td>
               <span class="badge" [class.badge-open]="v.isActive" [class.badge-closed]="!v.isActive">
                 {{ v.isActive ? 'Aktivno' : 'Neaktivno' }}
@@ -107,6 +110,13 @@ import { Vehicle } from '../models/vehicle';
             [class.error]="submitted && form.get('year')?.invalid" />
           <span class="field-error" *ngIf="submitted && form.get('year')?.invalid">1950 — {{ currentYear }}</span>
         </div>
+        <div class="form-field">
+          <label>Klijent</label>
+          <select formControlName="clientId" style="background:#0f1e30; color:#cbd5e1; border:1px solid #1e3a5f; border-radius:6px; padding:8px 12px; font-size:14px; width:100%;">
+            <option [ngValue]="null">— bez klijenta —</option>
+            <option *ngFor="let c of clients" [ngValue]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
         <div class="form-field" *ngIf="editVehicle">
           <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
             <input type="checkbox" formControlName="isActive" style="width:16px; height:16px; accent-color:#003580;" />
@@ -139,6 +149,7 @@ import { Vehicle } from '../models/vehicle';
 })
 export class VehiclesComponent implements OnInit {
   vehicles: Vehicle[] = [];
+  clients: Client[] = [];
   loading = false;
   submitted = false;
   modalVisible = false;
@@ -153,12 +164,16 @@ export class VehiclesComponent implements OnInit {
     make: ['', Validators.required],
     model: ['', Validators.required],
     year: [null as number | null, [Validators.min(1950), Validators.max(new Date().getFullYear() + 1)]],
-    isActive: [true]
+    isActive: [true],
+    clientId: [null as number | null]
   });
 
   constructor(private api: ApiService, private fb: FormBuilder) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.api.getClients().subscribe(c => this.clients = c);
+  }
 
   load() {
     this.loading = true;
@@ -170,7 +185,7 @@ export class VehiclesComponent implements OnInit {
 
   openAddModal() {
     this.editVehicle = null;
-    this.form.reset({ isActive: true });
+    this.form.reset({ isActive: true, clientId: null });
     this.submitted = false;
     this.modalVisible = true;
   }
@@ -182,7 +197,8 @@ export class VehiclesComponent implements OnInit {
       make: vehicle.make,
       model: vehicle.model,
       year: vehicle.year ?? null,
-      isActive: vehicle.isActive
+      isActive: vehicle.isActive,
+      clientId: vehicle.clientId ?? null
     });
     this.submitted = false;
     this.modalVisible = true;
@@ -204,14 +220,16 @@ export class VehiclesComponent implements OnInit {
         make: val.make!,
         model: val.model!,
         year: val.year ?? undefined,
-        isActive: val.isActive ?? true
+        isActive: val.isActive ?? true,
+        clientId: val.clientId ?? undefined
       }).subscribe(() => { this.closeModal(); this.load(); });
     } else {
       this.api.createVehicle({
         registration: val.registration!,
         make: val.make!,
         model: val.model!,
-        year: val.year ?? undefined
+        year: val.year ?? undefined,
+        clientId: val.clientId ?? undefined
       }).subscribe(() => { this.closeModal(); this.load(); });
     }
   }

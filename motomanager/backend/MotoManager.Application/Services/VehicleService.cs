@@ -34,6 +34,7 @@ public class VehicleService(IVehicleRepository repository) : IVehicleService
             Make = request.Make,
             Model = request.Model,
             Year = request.Year,
+            ClientId = request.ClientId,
             IsActive = true
         };
 
@@ -54,6 +55,7 @@ public class VehicleService(IVehicleRepository repository) : IVehicleService
         vehicle.Model = request.Model;
         vehicle.Year = request.Year;
         vehicle.IsActive = request.IsActive;
+        vehicle.ClientId = request.ClientId;
 
         await repository.UpdateAsync(vehicle, ct);
         return MapToDto(vehicle);
@@ -80,6 +82,8 @@ public class VehicleService(IVehicleRepository repository) : IVehicleService
             vehicle.Model,
             vehicle.Year,
             vehicle.IsActive,
+            vehicle.ClientId,
+            vehicle.Client?.Name,
             vehicle.CreatedAt,
             vehicle.UpdatedAt
         );

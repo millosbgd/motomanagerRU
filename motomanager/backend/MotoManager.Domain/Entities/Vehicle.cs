@@ -8,8 +8,10 @@ public class Vehicle
     public string Model { get; set; } = string.Empty;
     public int? Year { get; set; }
     public bool IsActive { get; set; } = true;
+    public long? ClientId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
+    public Client? Client { get; set; }
     public ICollection<ServiceOrder> ServiceOrders { get; set; } = new List<ServiceOrder>();
 }

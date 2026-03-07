@@ -4,5 +4,6 @@ public record CreateVehicleRequest(
     string Registration,
     string Make,
     string Model,
-    int? Year
+    int? Year,
+    long? ClientId
 );

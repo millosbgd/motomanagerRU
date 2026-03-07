@@ -22,6 +22,12 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.Property(v => v.Registration).HasMaxLength(32).IsRequired();
             entity.Property(v => v.Make).HasMaxLength(64).IsRequired();
             entity.Property(v => v.Model).HasMaxLength(64).IsRequired();
+            entity.Property(v => v.ClientId).HasColumnName("client_id");
+            entity.HasOne(v => v.Client)
+                .WithMany()
+                .HasForeignKey(v => v.ClientId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
         });
 
         modelBuilder.Entity<ServiceOrder>(entity =>
