@@ -8,56 +8,80 @@ body {
   color: #e2e8f0;
 }
 
-/* Navbar */
-.app-navbar {
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
-  padding: 0 24px;
+/* Layout */
+.app-layout {
   display: flex;
-  align-items: center;
-  gap: 0;
-  height: 60px;
+  min-height: 100vh;
 }
 
-.app-navbar .brand {
-  font-size: 18px;
+/* Sidebar */
+.app-sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0 16px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.app-sidebar .brand {
+  font-size: 17px;
   font-weight: 700;
   color: #60a5fa;
   letter-spacing: 0.5px;
-  margin-right: 32px;
+  padding: 0 20px 28px 20px;
   display: flex;
   align-items: center;
   gap: 8px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 16px;
 }
 
-.app-navbar a {
+.app-sidebar .nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 12px;
+}
+
+.app-sidebar a {
   color: #94a3b8;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
-  padding: 8px 16px;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
 }
 
-.app-navbar a:hover {
+.app-sidebar a:hover {
   color: #e2e8f0;
   background: #334155;
 }
 
-.app-navbar a.active {
+.app-sidebar a.active {
   color: #60a5fa;
-  background: rgba(96, 165, 250, 0.1);
+  background: rgba(96, 165, 250, 0.12);
+  font-weight: 600;
+}
+
+.app-sidebar a.active i {
+  color: #60a5fa;
 }
 
 /* Main content */
 .app-main {
-  padding: 28px 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+  flex: 1;
+  padding: 32px 36px;
+  max-width: 1100px;
+  overflow-y: auto;
 }
 
 /* Page header */
