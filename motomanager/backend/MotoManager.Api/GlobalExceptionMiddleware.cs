@@ -18,7 +18,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
             {
                 Title = "An unexpected error occurred.",
                 Status = StatusCodes.Status500InternalServerError,
-                Detail = "Please contact support if the problem persists."
+                Detail = ex.Message + " | " + ex.InnerException?.Message
             };
 
             context.Response.StatusCode = problem.Status ?? StatusCodes.Status500InternalServerError;
