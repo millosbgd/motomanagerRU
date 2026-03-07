@@ -148,12 +148,16 @@ orderGroup.MapPost("/{id:long}/close", async (long id, IServiceOrderService serv
         ? Results.Ok(closed)
         : Results.NotFound());
 
-if (app.Environment.IsDevelopment())
+// Kreiraj tabele ako ne postoje, seed samo u Development
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<MotoManagerDbContext>();
-    await dbContext.Database.MigrateAsync();
-    await DbSeeder.SeedAsync(dbContext, CancellationToken.None);
+    await dbContext.Database.EnsureCreatedAsync();
+
+    if (app.Environment.IsDevelopment())
+    {
+        await DbSeeder.SeedAsync(dbContext, CancellationToken.None);
+    }
 }
 
 app.Run();
