@@ -220,13 +220,6 @@ using (var scope = app.Services.CreateScope())
             updated_at timestamptz NOT NULL DEFAULT now(),
             UNIQUE (entity, code)
         );
-
-        INSERT INTO public.codebook_entries (entity, code, name, sort_order)
-        VALUES
-            ('ServiceOrderStatus', 'Open',       'Otvoreno',  0),
-            ('ServiceOrderStatus', 'InProgress', 'U toku',    1),
-            ('ServiceOrderStatus', 'Closed',     'Zatvoreno', 2)
-        ON CONFLICT (entity, code) DO NOTHING;
     ");
 
     if (app.Environment.IsDevelopment())
