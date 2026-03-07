@@ -152,7 +152,30 @@ orderGroup.MapPost("/{id:long}/close", async (long id, IServiceOrderService serv
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<MotoManagerDbContext>();
-    await dbContext.Database.EnsureCreatedAsync();
+
+    await dbContext.Database.ExecuteSqlRawAsync(@"
+        CREATE TABLE IF NOT EXISTS public.vehicles (
+            id bigserial PRIMARY KEY,
+            registration varchar(32) NOT NULL,
+            make varchar(64) NOT NULL,
+            model varchar(64) NOT NULL,
+            year integer NULL,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS public.service_orders (
+            id bigserial PRIMARY KEY,
+            vehicle_id bigint NOT NULL REFERENCES public.vehicles(id),
+            description text NOT NULL,
+            status integer NOT NULL DEFAULT 0,
+            opened_at timestamptz NOT NULL DEFAULT now(),
+            closed_at timestamptz NULL,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+        );
+    ");
 
     if (app.Environment.IsDevelopment())
     {
