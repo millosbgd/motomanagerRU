@@ -4,6 +4,7 @@ import { environment } from '../../environments/environment';
 import { CreateVehicleRequest, Vehicle } from '../models/vehicle';
 import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
+import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -87,5 +88,21 @@ export class ApiService {
 
   deleteCodebookEntry(id: number) {
     return this.http.delete(`${this.baseUrl}/api/codebook/${id}`);
+  }
+
+  getClients() {
+    return this.http.get<Client[]>(`${this.baseUrl}/api/clients`);
+  }
+
+  createClient(request: CreateClientRequest) {
+    return this.http.post<Client>(`${this.baseUrl}/api/clients`, request);
+  }
+
+  updateClient(id: number, request: UpdateClientRequest) {
+    return this.http.put<Client>(`${this.baseUrl}/api/clients/${id}`, request);
+  }
+
+  deleteClient(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/clients/${id}`);
   }
 }

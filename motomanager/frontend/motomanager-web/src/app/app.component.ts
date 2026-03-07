@@ -18,6 +18,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           <a routerLink="/vehicles" routerLinkActive="active">
             <i class="pi pi-car"></i> Vozila
           </a>
+          <a routerLink="/clients" routerLinkActive="active">
+            <i class="pi pi-users"></i> Klijenti
+          </a>
           <a routerLink="/service-orders" routerLinkActive="active">
             <i class="pi pi-wrench"></i> Servisni nalozi
           </a>

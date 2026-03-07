@@ -33,6 +33,8 @@ builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
 builder.Services.AddScoped<ICodebookRepository, CodebookRepository>();
 builder.Services.AddScoped<ICodebookService, CodebookService>();
+builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IClientService, ClientService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -181,6 +183,38 @@ codebookGroup.MapPut("/{id:long}", async (
 codebookGroup.MapDelete("/{id:long}", async (long id, ICodebookService service, CancellationToken ct)
     => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
 
+var clientGroup = app.MapGroup("/api/clients");
+
+clientGroup.MapGet("/", async (IClientService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+clientGroup.MapGet("/{id:long}", async (long id, IClientService service, CancellationToken ct)
+    => await service.GetByIdAsync(id, ct) is { } c
+        ? Results.Ok(c)
+        : Results.NotFound());
+
+clientGroup.MapPost("/", async (
+    CreateClientRequest request,
+    IClientService service,
+    CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/clients/{created.Id}", created);
+});
+
+clientGroup.MapPut("/{id:long}", async (
+    long id,
+    UpdateClientRequest request,
+    IClientService service,
+    CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+clientGroup.MapDelete("/{id:long}", async (long id, IClientService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
 // Kreiraj tabele ako ne postoje, seed samo u Development
 using (var scope = app.Services.CreateScope())
 {
@@ -219,6 +253,17 @@ using (var scope = app.Services.CreateScope())
             created_at timestamptz NOT NULL DEFAULT now(),
             updated_at timestamptz NOT NULL DEFAULT now(),
             UNIQUE (entity, code)
+        );
+
+        CREATE TABLE IF NOT EXISTS public.clients (
+            id bigserial PRIMARY KEY,
+            name varchar(128) NOT NULL,
+            address varchar(256) NULL,
+            city varchar(128) NULL,
+            country varchar(64) NULL,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
         );
     ");
 
