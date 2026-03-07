@@ -4,7 +4,7 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #07090f;
+  background: #060d1a;
   color: #dde6f0;
 }
 
@@ -81,7 +81,7 @@ body {
   flex: 1;
   overflow-y: auto;
   min-width: 0;
-  background: #07090f;
+  background: #060d1a;
 }
 
 .app-content {
@@ -146,7 +146,7 @@ body {
 }
 
 .form-field input {
-  background: #07090f;
+  background: #060d1a;
   border: 1px solid #1a2d4a;
   border-radius: 7px;
   color: #dde6f0;
@@ -273,12 +273,12 @@ body {
 }
 
 .btn-primary {
-  background: #1565c0;
+  background: #b71c1c;
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1a75d4;
+  background: #d32f2f;
 }
 
 .btn-primary:disabled {
