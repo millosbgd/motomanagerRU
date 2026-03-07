@@ -9,7 +9,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     <div class="app-layout">
       <nav class="app-sidebar">
         <div class="brand">
-          <span>&#x1F3CD;</span> MotoManager
+          <img src="images/2026-03-07_17-04-08.png" alt="BMW Moto Garaža" style="width:160px; display:block;" />
         </div>
         <div class="nav-links">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">

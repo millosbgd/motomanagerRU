@@ -29,14 +29,10 @@ body {
 }
 
 .app-sidebar .brand {
-  font-size: 17px;
-  font-weight: 700;
-  color: #c0392b;
-  letter-spacing: 0.5px;
-  padding: 0 20px 24px 20px;
+  padding: 16px 16px 20px 16px;
   display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: center;
   border-bottom: 1px solid #112238;
   margin-bottom: 16px;
 }
