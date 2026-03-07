@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { CreateVehicleRequest, Vehicle } from '../models/vehicle';
+import { CreateVehicleRequest, Vehicle, UpdateVehicleRequest } from '../models/vehicle';
 import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
@@ -41,6 +41,18 @@ export class ApiService {
 
   createVehicle(request: CreateVehicleRequest) {
     return this.http.post<Vehicle>(`${this.baseUrl}/api/vehicles`, request).pipe(
+      tap(() => this.invalidateVehicles())
+    );
+  }
+
+  updateVehicle(id: number, request: UpdateVehicleRequest) {
+    return this.http.put<Vehicle>(`${this.baseUrl}/api/vehicles/${id}`, request).pipe(
+      tap(() => this.invalidateVehicles())
+    );
+  }
+
+  deleteVehicle(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/vehicles/${id}`).pipe(
       tap(() => this.invalidateVehicles())
     );
   }

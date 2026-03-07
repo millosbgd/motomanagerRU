@@ -15,3 +15,11 @@ export interface CreateVehicleRequest {
   model: string;
   year?: number;
 }
+
+export interface UpdateVehicleRequest {
+  registration: string;
+  make: string;
+  model: string;
+  year?: number;
+  isActive: boolean;
+}
