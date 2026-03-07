@@ -3,6 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { CreateVehicleRequest, Vehicle } from '../models/vehicle';
 import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
+import { retry, timer } from 'rxjs';
+
+const RETRY_CONFIG = {
+  count: 3,
+  delay: (error: any, retryCount: number) => timer(retryCount * 2000)
+};
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -11,7 +17,7 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   getVehicles() {
-    return this.http.get<Vehicle[]>(`${this.baseUrl}/api/vehicles`);
+    return this.http.get<Vehicle[]>(`${this.baseUrl}/api/vehicles`).pipe(retry(RETRY_CONFIG));
   }
 
   createVehicle(request: CreateVehicleRequest) {
@@ -19,7 +25,7 @@ export class ApiService {
   }
 
   getServiceOrders() {
-    return this.http.get<ServiceOrder[]>(`${this.baseUrl}/api/service-orders`);
+    return this.http.get<ServiceOrder[]>(`${this.baseUrl}/api/service-orders`).pipe(retry(RETRY_CONFIG));
   }
 
   createServiceOrder(request: CreateServiceOrderRequest) {

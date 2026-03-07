@@ -26,7 +26,12 @@ import { Vehicle } from '../models/vehicle';
         <h2>Lista naloga</h2>
         <span class="count-badge">{{ orders.length }} naloga</span>
       </div>
-      <table class="data-table">
+      <div *ngIf="loading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">
+        <i class="pi pi-spin pi-spinner" style="font-size:20px;"></i>
+        <span>Učitavanje... (server se budi, može trajati do 60s)</span>
+      </div>
+
+      <table class="data-table" *ngIf="!loading">
         <thead>
           <tr>
             <th>#</th>
@@ -108,6 +113,7 @@ import { Vehicle } from '../models/vehicle';
 export class ServiceOrdersComponent implements OnInit {
   orders: ServiceOrder[] = [];
   vehicles: Vehicle[] = [];
+  loading = false;
   submitted = false;
   modalVisible = false;
 
@@ -124,7 +130,11 @@ export class ServiceOrdersComponent implements OnInit {
   }
 
   load() {
-    this.api.getServiceOrders().subscribe(orders => this.orders = orders);
+    this.loading = true;
+    this.api.getServiceOrders().subscribe({
+      next: orders => { this.orders = orders; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
   }
 
   openModal() {

@@ -25,7 +25,13 @@ import { Vehicle } from '../models/vehicle';
         <h2>Lista vozila</h2>
         <span class="count-badge">{{ vehicles.length }} vozila</span>
       </div>
-      <table class="data-table">
+
+      <div *ngIf="loading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">
+        <i class="pi pi-spin pi-spinner" style="font-size:20px;"></i>
+        <span>Učitavanje... (server se budi, može trajati do 60s)</span>
+      </div>
+
+      <table class="data-table" *ngIf="!loading">
         <thead>
           <tr>
             <th>#</th>
@@ -104,6 +110,7 @@ import { Vehicle } from '../models/vehicle';
 })
 export class VehiclesComponent implements OnInit {
   vehicles: Vehicle[] = [];
+  loading = false;
   submitted = false;
   modalVisible = false;
   currentYear = new Date().getFullYear();
@@ -120,7 +127,11 @@ export class VehiclesComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.api.getVehicles().subscribe(v => this.vehicles = v);
+    this.loading = true;
+    this.api.getVehicles().subscribe({
+      next: v => { this.vehicles = v; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
   }
 
   openModal() {
