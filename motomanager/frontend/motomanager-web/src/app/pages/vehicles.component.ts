@@ -22,7 +22,6 @@ import { Vehicle } from '../models/vehicle';
 
     <div class="data-card">
       <div class="data-card-header">
-        <h2>Lista vozila</h2>
         <span class="count-badge">{{ vehicles.length }} vozila</span>
       </div>
 

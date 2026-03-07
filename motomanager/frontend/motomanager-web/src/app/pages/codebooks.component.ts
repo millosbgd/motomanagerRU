@@ -11,10 +11,6 @@ import { CodebookEntry } from '../models/codebook-entry';
   imports: [CommonModule, ReactiveFormsModule, DialogModule],
   template: `
     <div class="page-header" style="display:flex; align-items:center; justify-content:space-between;">
-      <div>
-        <h1>Šifarnici</h1>
-        <p>Upravljanje šifarnicima i referentnim podacima</p>
-      </div>
       <button class="btn btn-primary" (click)="openAddModal()">
         <i class="pi pi-plus"></i> Novi unos
       </button>

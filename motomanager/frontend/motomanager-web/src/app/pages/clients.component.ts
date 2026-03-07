@@ -23,7 +23,6 @@ import { CodebookEntry } from '../models/codebook-entry';
 
     <div class="data-card">
       <div class="data-card-header">
-        <h2>Lista klijenata</h2>
         <span class="count-badge">{{ clients.length }} klijenata</span>
       </div>
 
