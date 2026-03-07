@@ -117,7 +117,7 @@ import { Client } from '../models/client';
             <option *ngFor="let c of clients" [ngValue]="c.id">{{ c.name }}</option>
           </select>
         </div>
-        <div class="form-field" *ngIf="editVehicle">
+        <div class="form-field">
           <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
             <input type="checkbox" formControlName="isActive" style="width:16px; height:16px; accent-color:#003580;" />
             Aktivno
