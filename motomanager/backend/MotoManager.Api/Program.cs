@@ -17,6 +17,7 @@ builder.Services.AddCors();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 builder.Services.AddDbContext<MotoManagerDbContext>(options =>
