@@ -124,6 +124,22 @@ import { CodebookEntry } from '../models/codebook-entry';
         </div>
       </form>
     </p-dialog>
+
+    <!-- Confirm brisanje -->
+    <p-dialog
+      header="Potvrda brisanja"
+      [(visible)]="confirmVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '400px'}"
+      styleClass="dark-dialog">
+      <p style="color:#cbd5e1; margin:8px 0 24px;">{{ confirmMessage }}</p>
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button class="btn" style="background:#334155; color:#94a3b8;" (click)="confirmVisible = false">Otkaži</button>
+        <button class="btn" style="background:#b71c1c; color:#fff;" (click)="confirmAction()"><i class="pi pi-trash"></i> Obriši</button>
+      </div>
+    </p-dialog>
   `
 })
 export class ClientsComponent implements OnInit {
@@ -133,6 +149,9 @@ export class ClientsComponent implements OnInit {
   submitted = false;
   modalVisible = false;
   editClient: Client | null = null;
+  confirmVisible = false;
+  confirmMessage = '';
+  private pendingDelete?: () => void;
 
   form = this.fb.group({
     name: ['', Validators.required],
@@ -207,7 +226,13 @@ export class ClientsComponent implements OnInit {
   }
 
   delete(client: Client) {
-    if (!confirm(`Obriši klijenta "${client.name}"?`)) return;
-    this.api.deleteClient(client.id).subscribe(() => this.load());
+    this.confirmMessage = `Obriši klijenta "${client.name}"?`;
+    this.pendingDelete = () => this.api.deleteClient(client.id).subscribe(() => this.load());
+    this.confirmVisible = true;
+  }
+
+  confirmAction() {
+    this.confirmVisible = false;
+    this.pendingDelete?.();
   }
 }

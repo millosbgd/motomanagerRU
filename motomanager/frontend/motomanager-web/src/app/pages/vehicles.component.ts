@@ -121,6 +121,22 @@ import { Vehicle } from '../models/vehicle';
         </div>
       </form>
     </p-dialog>
+
+    <!-- Confirm brisanje -->
+    <p-dialog
+      header="Potvrda brisanja"
+      [(visible)]="confirmVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '400px'}"
+      styleClass="dark-dialog">
+      <p style="color:#cbd5e1; margin:8px 0 24px;">{{ confirmMessage }}</p>
+      <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <button class="btn" style="background:#334155; color:#94a3b8;" (click)="confirmVisible = false">Otkaži</button>
+        <button class="btn" style="background:#b71c1c; color:#fff;" (click)="confirmAction()"><i class="pi pi-trash"></i> Obriši</button>
+      </div>
+    </p-dialog>
   `
 })
 export class VehiclesComponent implements OnInit {
@@ -130,6 +146,9 @@ export class VehiclesComponent implements OnInit {
   modalVisible = false;
   editVehicle: Vehicle | null = null;
   currentYear = new Date().getFullYear();
+  confirmVisible = false;
+  confirmMessage = '';
+  private pendingDelete?: () => void;
 
   form = this.fb.group({
     registration: ['', Validators.required],
@@ -200,7 +219,13 @@ export class VehiclesComponent implements OnInit {
   }
 
   delete(vehicle: Vehicle) {
-    if (!confirm(`Obriši vozilo "${vehicle.registration} — ${vehicle.make} ${vehicle.model}"?`)) return;
-    this.api.deleteVehicle(vehicle.id).subscribe(() => this.load());
+    this.confirmMessage = `Obriši vozilo "${vehicle.registration} — ${vehicle.make} ${vehicle.model}"?`;
+    this.pendingDelete = () => this.api.deleteVehicle(vehicle.id).subscribe(() => this.load());
+    this.confirmVisible = true;
+  }
+
+  confirmAction() {
+    this.confirmVisible = false;
+    this.pendingDelete?.();
   }
 }
