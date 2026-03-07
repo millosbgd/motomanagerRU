@@ -120,7 +120,7 @@ import { Vehicle } from '../models/vehicle';
 
         <!-- Vozila klijenta -->
         <div *ngIf="editClient" style="border-top:1px solid #1e293b; padding-top:16px; margin-top:4px;">
-          <div style="font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Vozila klijenta</div>
+          <div style="font-size:12px; color:#475569; margin-bottom:10px;">Vozila klijenta</div>
           <div *ngIf="vehiclesFor(editClient.id).length === 0" style="color:#475569; font-size:13px; font-style:italic; padding:8px 0;">Nema dodeljenih vozila</div>
           <table *ngIf="vehiclesFor(editClient.id).length > 0" style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
