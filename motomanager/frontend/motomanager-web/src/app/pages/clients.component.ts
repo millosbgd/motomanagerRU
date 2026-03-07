@@ -5,6 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
 import { Client } from '../models/client';
 import { CodebookEntry } from '../models/codebook-entry';
+import { Vehicle } from '../models/vehicle';
 
 @Component({
   standalone: true,
@@ -49,8 +50,11 @@ import { CodebookEntry } from '../models/codebook-entry';
               Nema klijenata. Dodaj prvog klijenta.
             </td>
           </tr>
-          <tr *ngFor="let c of clients">
-            <td style="color:#475569; font-size:13px;">{{ c.id }}</td>
+          <tr *ngFor="let c of clients" [style.cursor]="'pointer'" (click)="toggleExpand(c)">
+            <td style="color:#475569; font-size:13px;">
+              <i class="pi" [class.pi-chevron-down]="expandedClientId === c.id" [class.pi-chevron-right]="expandedClientId !== c.id" style="font-size:11px; margin-right:6px; color:#475569;"></i>
+              {{ c.id }}
+            </td>
             <td><strong style="color:#f1f5f9;">{{ c.name }}</strong></td>
             <td style="color:#94a3b8;">{{ c.address || '—' }}</td>
             <td style="color:#94a3b8;">{{ c.city || '—' }}</td>
@@ -60,13 +64,45 @@ import { CodebookEntry } from '../models/codebook-entry';
                 {{ c.isActive ? 'Aktivan' : 'Neaktivan' }}
               </span>
             </td>
-            <td style="display:flex; gap:8px;">
+            <td style="display:flex; gap:8px;" (click)="$event.stopPropagation()">
               <button class="btn" style="padding:6px 12px; background:#1e3a5f; color:#94a3b8; font-size:13px;" (click)="openEditModal(c)">
                 <i class="pi pi-pencil"></i>
               </button>
               <button class="btn" style="padding:6px 12px; background:#3b0f0f; color:#f87171; font-size:13px;" (click)="delete(c)">
                 <i class="pi pi-trash"></i>
               </button>
+            </td>
+          </tr>
+          <tr *ngIf="expandedClientId === c.id">
+            <td colspan="7" style="padding:0; background:#0a1628;">
+              <div style="padding:12px 24px 16px 40px;">
+                <div style="font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">
+                  Vozila klijenta
+                </div>
+                <div *ngIf="vehiclesFor(c.id).length === 0" style="color:#334155; font-size:13px; font-style:italic;">Nema dodeljenih vozila</div>
+                <table *ngIf="vehiclesFor(c.id).length > 0" style="width:100%; border-collapse:collapse; font-size:13px;">
+                  <thead>
+                    <tr style="color:#475569; text-transform:uppercase; font-size:11px; letter-spacing:0.06em;">
+                      <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Registracija</th>
+                      <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Marka</th>
+                      <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Model</th>
+                      <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Godina</th>
+                      <th style="padding:4px 0 8px 0; text-align:left; font-weight:600;">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let v of vehiclesFor(c.id)" style="border-top:1px solid #1e293b;">
+                      <td style="padding:7px 12px 7px 0; color:#e2e8f0; font-weight:600;">{{ v.registration }}</td>
+                      <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.make }}</td>
+                      <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.model }}</td>
+                      <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.year ?? '—' }}</td>
+                      <td style="padding:7px 0;">
+                        <span class="badge" [class.badge-open]="v.isActive" [class.badge-closed]="!v.isActive">{{ v.isActive ? 'Aktivno' : 'Neaktivno' }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -142,11 +178,13 @@ import { CodebookEntry } from '../models/codebook-entry';
 })
 export class ClientsComponent implements OnInit {
   clients: Client[] = [];
+  allVehicles: Vehicle[] = [];
   countries: CodebookEntry[] = [];
   loading = false;
   submitted = false;
   modalVisible = false;
   editClient: Client | null = null;
+  expandedClientId: number | null = null;
   confirmVisible = false;
   confirmMessage = '';
   private pendingDelete?: () => void;
@@ -163,6 +201,7 @@ export class ClientsComponent implements OnInit {
 
   ngOnInit() {
     this.load();
+    this.api.getVehicles().subscribe(v => this.allVehicles = v);
     this.api.getCodebookByEntity('Country').subscribe(data => this.countries = data);
   }
 
@@ -172,6 +211,14 @@ export class ClientsComponent implements OnInit {
       next: data => { this.clients = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
+  }
+
+  toggleExpand(client: Client) {
+    this.expandedClientId = this.expandedClientId === client.id ? null : client.id;
+  }
+
+  vehiclesFor(clientId: number): Vehicle[] {
+    return this.allVehicles.filter(v => v.clientId === clientId);
   }
 
   openAddModal() {
