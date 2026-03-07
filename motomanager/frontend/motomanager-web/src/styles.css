@@ -4,8 +4,8 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: #07090f;
+  color: #dde6f0;
 }
 
 /* Layout */
@@ -16,10 +16,10 @@ body {
 
 /* Sidebar */
 .app-sidebar {
-  width: 220px;
-  min-width: 220px;
-  background: #1e293b;
-  border-right: 1px solid #334155;
+  width: 224px;
+  min-width: 224px;
+  background: #0b0f1c;
+  border-right: 1px solid #1a2d4a;
   display: flex;
   flex-direction: column;
   padding: 24px 0 16px 0;
@@ -31,49 +31,49 @@ body {
 .app-sidebar .brand {
   font-size: 17px;
   font-weight: 700;
-  color: #60a5fa;
+  color: #c0392b;
   letter-spacing: 0.5px;
-  padding: 0 20px 28px 20px;
+  padding: 0 20px 24px 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #334155;
+  gap: 9px;
+  border-bottom: 1px solid #1a2d4a;
   margin-bottom: 16px;
 }
 
 .app-sidebar .nav-links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 12px;
+  gap: 2px;
+  padding: 0 10px;
 }
 
 .app-sidebar a {
-  color: #94a3b8;
+  color: #7a98b8;
   text-decoration: none;
   font-weight: 500;
   font-size: 14px;
   padding: 10px 14px;
-  border-radius: 8px;
-  transition: all 0.2s;
+  border-radius: 7px;
+  transition: all 0.18s;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .app-sidebar a:hover {
-  color: #e2e8f0;
-  background: #334155;
+  color: #c8d8ea;
+  background: #122040;
 }
 
 .app-sidebar a.active {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.12);
+  color: #fff;
+  background: #1565c0;
   font-weight: 600;
 }
 
 .app-sidebar a.active i {
-  color: #60a5fa;
+  color: #fff;
 }
 
 /* Main content */
@@ -81,6 +81,7 @@ body {
   flex: 1;
   overflow-y: auto;
   min-width: 0;
+  background: #07090f;
 }
 
 .app-content {
@@ -96,13 +97,13 @@ body {
 
 .page-header h1 {
   font-size: 22px;
-  font-weight: 600;
-  color: #f1f5f9;
+  font-weight: 700;
+  color: #eaf1f8;
   margin: 0 0 4px 0;
 }
 
 .page-header p {
-  color: #64748b;
+  color: #4f6e8a;
   margin: 0;
   font-size: 14px;
 }
@@ -138,17 +139,17 @@ body {
 
 .form-field label {
   font-size: 12px;
-  font-weight: 500;
-  color: #94a3b8;
+  font-weight: 600;
+  color: #7a98b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .form-field input {
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  color: #e2e8f0;
+  background: #07090f;
+  border: 1px solid #1a2d4a;
+  border-radius: 7px;
+  color: #dde6f0;
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
@@ -157,29 +158,30 @@ body {
 }
 
 .form-field input:focus {
-  border-color: #60a5fa;
+  border-color: #1565c0;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.18);
 }
 
 .form-field input.error {
-  border-color: #f87171;
+  border-color: #c62828;
 }
 
 .field-error {
   font-size: 12px;
-  color: #f87171;
+  color: #e57373;
 }
 
 /* Data card */
 .data-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #0c1220;
+  border: 1px solid #1a2d4a;
   border-radius: 12px;
   overflow: hidden;
 }
 
 .data-card-header {
   padding: 16px 24px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #1a2d4a;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -189,12 +191,12 @@ body {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: #eaf1f8;
 }
 
 .count-badge {
-  background: #334155;
-  color: #94a3b8;
+  background: #122040;
+  color: #5d88b0;
   font-size: 12px;
   font-weight: 600;
   padding: 2px 10px;
@@ -209,21 +211,21 @@ body {
 
 .data-table th {
   text-align: left;
-  padding: 12px 24px;
+  padding: 11px 24px;
   font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 700;
+  color: #4f6e8a;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  background: #162032;
-  border-bottom: 1px solid #334155;
+  background: #09111d;
+  border-bottom: 1px solid #1a2d4a;
 }
 
 .data-table td {
-  padding: 14px 24px;
+  padding: 13px 24px;
   font-size: 14px;
-  color: #cbd5e1;
-  border-bottom: 1px solid #1e293b;
+  color: #b0c4d8;
+  border-bottom: 1px solid #0f1a2c;
 }
 
 .data-table tr:last-child td {
@@ -231,12 +233,12 @@ body {
 }
 
 .data-table tr:hover td {
-  background: #243447;
+  background: #0e1d30;
 }
 
 .data-table .empty-row td {
   text-align: center;
-  color: #475569;
+  color: #2e4a64;
   padding: 40px;
   font-size: 14px;
 }
@@ -251,9 +253,9 @@ body {
   font-weight: 600;
 }
 
-.badge-open { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-.badge-inprogress { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-.badge-closed { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+.badge-open    { background: rgba(21, 101, 192, 0.2); color: #5ba3f5; }
+.badge-inprogress { background: rgba(198, 108, 20, 0.2); color: #f5a623; }
+.badge-closed  { background: rgba(30, 30, 50, 0.6); color: #4f6e8a; }
 
 /* Buttons */
 .btn {
@@ -261,48 +263,49 @@ body {
   align-items: center;
   gap: 6px;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 7px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  line-height: 1;
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: #1565c0;
   color: #fff;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #1a75d4;
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: rgba(198, 40, 40, 0.15);
+  color: #e57373;
   padding: 6px 12px;
   font-size: 12px;
 }
 
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.25);
+  background: rgba(198, 40, 40, 0.28);
 }
 
 .btn-success {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  background: rgba(21, 101, 192, 0.15);
+  color: #5ba3f5;
   padding: 6px 12px;
   font-size: 12px;
 }
 
 .btn-success:hover {
-  background: rgba(34, 197, 94, 0.25);
+  background: rgba(21, 101, 192, 0.28);
 }
 
 /* Stat cards */
@@ -314,25 +317,25 @@ body {
 }
 
 .stat-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #0c1220;
+  border: 1px solid #1a2d4a;
   border-radius: 12px;
   padding: 20px 24px;
 }
 
 .stat-card .stat-label {
   font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
+  color: #4f6e8a;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
 }
 
 .stat-card .stat-value {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #eaf1f8;
 }
 
 .stat-card .stat-icon {
@@ -342,45 +345,45 @@ body {
 
 /* PrimeNG Dialog - dark override */
 .dark-dialog .p-dialog {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
+  background: #0c1220 !important;
+  border: 1px solid #1a2d4a !important;
   border-radius: 12px !important;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.6) !important;
-  color: #e2e8f0 !important;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.75) !important;
+  color: #dde6f0 !important;
 }
 
 .dark-dialog .p-dialog-header {
-  background: #1e293b !important;
-  border-bottom: 1px solid #334155 !important;
+  background: #0c1220 !important;
+  border-bottom: 1px solid #1a2d4a !important;
   border-radius: 12px 12px 0 0 !important;
   padding: 18px 24px !important;
 }
 
 .dark-dialog .p-dialog-title {
-  color: #f1f5f9 !important;
+  color: #eaf1f8 !important;
   font-size: 16px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
 }
 
 .dark-dialog .p-dialog-header-icons button {
-  color: #64748b !important;
+  color: #4f6e8a !important;
   background: transparent !important;
   border: none !important;
 }
 
 .dark-dialog .p-dialog-header-icons button:hover {
-  color: #94a3b8 !important;
-  background: rgba(100,116,139,0.15) !important;
+  color: #8ab0cc !important;
+  background: rgba(21, 101, 192, 0.15) !important;
 }
 
 .dark-dialog .p-dialog-content {
-  background: #1e293b !important;
+  background: #0c1220 !important;
   border-radius: 0 0 12px 12px !important;
   padding: 16px 24px 24px !important;
-  color: #e2e8f0 !important;
+  color: #dde6f0 !important;
 }
 
 .p-dialog-mask {
-  background: rgba(0, 0, 0, 0.65) !important;
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(3px);
 }
