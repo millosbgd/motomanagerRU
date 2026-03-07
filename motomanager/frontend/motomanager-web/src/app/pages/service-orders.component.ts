@@ -56,7 +56,7 @@ export class ServiceOrdersComponent implements OnInit {
       return;
     }
 
-    this.api.createServiceOrder(this.form.getRawValue()).subscribe(() => {
+    this.api.createServiceOrder(this.form.getRawValue() as any).subscribe(() => {
       this.form.reset();
       this.load();
     });

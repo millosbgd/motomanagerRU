@@ -58,7 +58,7 @@ export class VehiclesComponent implements OnInit {
       return;
     }
 
-    this.api.createVehicle(this.form.getRawValue()).subscribe(() => {
+    this.api.createVehicle(this.form.getRawValue() as any).subscribe(() => {
       this.form.reset();
       this.load();
     });
