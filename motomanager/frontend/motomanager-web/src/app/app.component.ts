@@ -24,7 +24,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         </div>
       </nav>
       <main class="app-main">
-        <router-outlet></router-outlet>
+        <div class="app-content">
+          <router-outlet></router-outlet>
+        </div>
       </main>
     </div>
   `
