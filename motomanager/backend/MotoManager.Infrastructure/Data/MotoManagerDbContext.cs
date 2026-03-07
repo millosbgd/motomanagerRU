@@ -7,6 +7,7 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
 {
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
+    public DbSet<CodebookEntry> CodebookEntries => Set<CodebookEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +32,16 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
                 .WithMany(v => v.ServiceOrders)
                 .HasForeignKey(s => s.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CodebookEntry>(entity =>
+        {
+            entity.ToTable("codebook_entries");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.Entity, e.Code }).IsUnique();
+            entity.Property(e => e.Entity).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.Code).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.Name).HasMaxLength(128).IsRequired();
         });
     }
 
@@ -74,6 +85,19 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
                 else if (entry.State == EntityState.Modified)
                 {
                     order.UpdatedAt = now;
+                }
+            }
+
+            if (entry.Entity is CodebookEntry codebook)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    codebook.CreatedAt = now;
+                    codebook.UpdatedAt = now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    codebook.UpdatedAt = now;
                 }
             }
         }

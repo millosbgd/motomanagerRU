@@ -31,6 +31,8 @@ builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IServiceOrderRepository, ServiceOrderRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IServiceOrderService, ServiceOrderService>();
+builder.Services.AddScoped<ICodebookRepository, CodebookRepository>();
+builder.Services.AddScoped<ICodebookService, CodebookService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -149,6 +151,36 @@ orderGroup.MapPost("/{id:long}/close", async (long id, IServiceOrderService serv
         ? Results.Ok(closed)
         : Results.NotFound());
 
+var codebookGroup = app.MapGroup("/api/codebook");
+
+codebookGroup.MapGet("/", async (ICodebookService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+codebookGroup.MapGet("/{entity}", async (string entity, ICodebookService service, CancellationToken ct)
+    => Results.Ok(await service.GetByEntityAsync(entity, ct)));
+
+codebookGroup.MapPost("/", async (
+    CreateCodebookEntryRequest request,
+    ICodebookService service,
+    CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/codebook/{created.Id}", created);
+});
+
+codebookGroup.MapPut("/{id:long}", async (
+    long id,
+    UpdateCodebookEntryRequest request,
+    ICodebookService service,
+    CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+codebookGroup.MapDelete("/{id:long}", async (long id, ICodebookService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
 // Kreiraj tabele ako ne postoje, seed samo u Development
 using (var scope = app.Services.CreateScope())
 {
@@ -176,6 +208,25 @@ using (var scope = app.Services.CreateScope())
             created_at timestamptz NOT NULL DEFAULT now(),
             updated_at timestamptz NOT NULL DEFAULT now()
         );
+
+        CREATE TABLE IF NOT EXISTS public.codebook_entries (
+            id bigserial PRIMARY KEY,
+            entity varchar(64) NOT NULL,
+            code varchar(64) NOT NULL,
+            name varchar(128) NOT NULL,
+            sort_order integer NOT NULL DEFAULT 0,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now(),
+            UNIQUE (entity, code)
+        );
+
+        INSERT INTO public.codebook_entries (entity, code, name, sort_order)
+        VALUES
+            ('ServiceOrderStatus', 'Open',       'Otvoreno',  0),
+            ('ServiceOrderStatus', 'InProgress', 'U toku',    1),
+            ('ServiceOrderStatus', 'Closed',     'Zatvoreno', 2)
+        ON CONFLICT (entity, code) DO NOTHING;
     ");
 
     if (app.Environment.IsDevelopment())

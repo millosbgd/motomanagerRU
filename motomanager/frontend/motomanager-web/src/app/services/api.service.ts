@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { CreateVehicleRequest, Vehicle } from '../models/vehicle';
 import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
+import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -66,5 +67,25 @@ export class ApiService {
     return this.http.post<ServiceOrder>(`${this.baseUrl}/api/service-orders/${id}/close`, {}).pipe(
       tap(() => this.invalidateOrders())
     );
+  }
+
+  getCodebook() {
+    return this.http.get<CodebookEntry[]>(`${this.baseUrl}/api/codebook`);
+  }
+
+  getCodebookByEntity(entity: string) {
+    return this.http.get<CodebookEntry[]>(`${this.baseUrl}/api/codebook/${entity}`);
+  }
+
+  createCodebookEntry(request: CreateCodebookEntryRequest) {
+    return this.http.post<CodebookEntry>(`${this.baseUrl}/api/codebook`, request);
+  }
+
+  updateCodebookEntry(id: number, request: UpdateCodebookEntryRequest) {
+    return this.http.put<CodebookEntry>(`${this.baseUrl}/api/codebook/${id}`, request);
+  }
+
+  deleteCodebookEntry(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/codebook/${id}`);
   }
 }
