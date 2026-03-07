@@ -23,7 +23,6 @@ import { Vehicle } from '../models/vehicle';
 
     <div class="data-card">
       <div class="data-card-header">
-        <span class="count-badge">{{ orders.length }} naloga</span>
       </div>
       <div *ngIf="loading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">
         <i class="pi pi-spin pi-spinner" style="font-size:20px;"></i>

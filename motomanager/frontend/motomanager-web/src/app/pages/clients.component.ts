@@ -23,7 +23,6 @@ import { CodebookEntry } from '../models/codebook-entry';
 
     <div class="data-card">
       <div class="data-card-header">
-        <span class="count-badge">{{ clients.length }} klijenata</span>
       </div>
 
       <div *ngIf="loading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">

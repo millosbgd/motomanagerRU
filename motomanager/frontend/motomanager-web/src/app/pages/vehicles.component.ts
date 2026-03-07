@@ -22,7 +22,6 @@ import { Vehicle } from '../models/vehicle';
 
     <div class="data-card">
       <div class="data-card-header">
-        <span class="count-badge">{{ vehicles.length }} vozila</span>
       </div>
 
       <div *ngIf="loading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">
