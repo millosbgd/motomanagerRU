@@ -1,62 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
 import { Vehicle } from '../models/vehicle';
 
 @Component({
   standalone: true,
   selector: 'app-vehicles',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DialogModule],
   template: `
-    <div class="page-header">
-      <h1>Vozila</h1>
-      <p>Evidencija svih registrovanih vozila</p>
-    </div>
-
-    <div class="form-card">
-      <h2>Dodaj novo vozilo</h2>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Registracija *</label>
-            <input formControlName="registration" placeholder="npr. BG-123-AB"
-              [class.error]="submitted && form.get('registration')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('registration')?.invalid">
-              Obavezno polje
-            </span>
-          </div>
-          <div class="form-field">
-            <label>Marka *</label>
-            <input formControlName="make" placeholder="npr. BMW"
-              [class.error]="submitted && form.get('make')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('make')?.invalid">
-              Obavezno polje
-            </span>
-          </div>
-          <div class="form-field">
-            <label>Model *</label>
-            <input formControlName="model" placeholder="npr. R 1250 GS"
-              [class.error]="submitted && form.get('model')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('model')?.invalid">
-              Obavezno polje
-            </span>
-          </div>
-          <div class="form-field">
-            <label>Godina</label>
-            <input formControlName="year" type="number" placeholder="npr. 2022"
-              [class.error]="submitted && form.get('year')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('year')?.invalid">
-              1950 &mdash; {{ currentYear }}
-            </span>
-          </div>
-          <div class="form-field" style="justify-content: flex-end;">
-            <button type="submit" class="btn btn-primary">
-              <i class="pi pi-plus"></i> Dodaj vozilo
-            </button>
-          </div>
-        </div>
-      </form>
+    <div class="page-header" style="display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <h1>Vozila</h1>
+        <p>Evidencija svih registrovanih vozila</p>
+      </div>
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="pi pi-plus"></i> Dodaj vozilo
+      </button>
     </div>
 
     <div class="data-card">
@@ -87,7 +48,7 @@ import { Vehicle } from '../models/vehicle';
             <td><strong style="color:#f1f5f9;">{{ v.registration }}</strong></td>
             <td>{{ v.make }}</td>
             <td>{{ v.model }}</td>
-            <td>{{ v.year || '&mdash;' }}</td>
+            <td>{{ v.year ?? '\u2014' }}</td>
             <td>
               <span class="badge" [class.badge-open]="v.isActive" [class.badge-closed]="!v.isActive">
                 {{ v.isActive ? 'Aktivno' : 'Neaktivno' }}
@@ -97,11 +58,54 @@ import { Vehicle } from '../models/vehicle';
         </tbody>
       </table>
     </div>
+
+    <!-- Modal -->
+    <p-dialog
+      header="Novo vozilo"
+      [(visible)]="modalVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '480px'}"
+      styleClass="dark-dialog">
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+        <div class="form-field">
+          <label>Registracija *</label>
+          <input formControlName="registration" placeholder="npr. BG-123-AB"
+            [class.error]="submitted && form.get('registration')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('registration')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Marka *</label>
+          <input formControlName="make" placeholder="npr. BMW"
+            [class.error]="submitted && form.get('make')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('make')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Model *</label>
+          <input formControlName="model" placeholder="npr. R 1250 GS"
+            [class.error]="submitted && form.get('model')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('model')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Godina</label>
+          <input formControlName="year" type="number" placeholder="npr. 2022"
+            [class.error]="submitted && form.get('year')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('year')?.invalid">1950 &mdash; {{ currentYear }}</span>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeModal()">Otkaži</button>
+          <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
+        </div>
+      </form>
+    </p-dialog>
   `
 })
 export class VehiclesComponent implements OnInit {
   vehicles: Vehicle[] = [];
   submitted = false;
+  modalVisible = false;
   currentYear = new Date().getFullYear();
 
   form = this.fb.group({
@@ -116,15 +120,24 @@ export class VehiclesComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.api.getVehicles().subscribe(vehicles => this.vehicles = vehicles);
+    this.api.getVehicles().subscribe(v => this.vehicles = v);
+  }
+
+  openModal() {
+    this.form.reset();
+    this.submitted = false;
+    this.modalVisible = true;
+  }
+
+  closeModal() {
+    this.modalVisible = false;
   }
 
   onSubmit() {
     this.submitted = true;
     if (this.form.invalid) return;
     this.api.createVehicle(this.form.getRawValue() as any).subscribe(() => {
-      this.form.reset();
-      this.submitted = false;
+      this.closeModal();
       this.load();
     });
   }

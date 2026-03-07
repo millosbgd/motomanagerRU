@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
 import { ServiceOrder } from '../models/service-order';
 import { Vehicle } from '../models/vehicle';
@@ -8,46 +9,16 @@ import { Vehicle } from '../models/vehicle';
 @Component({
   standalone: true,
   selector: 'app-service-orders',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DialogModule],
   template: `
-    <div class="page-header">
-      <h1>Servisni nalozi</h1>
-      <p>Upravljanje servisnim nalozima po vozilima</p>
-    </div>
-
-    <div class="form-card">
-      <h2>Novi servisni nalog</h2>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div class="form-grid">
-          <div class="form-field">
-            <label>Vozilo *</label>
-            <select formControlName="vehicleId"
-              [class.error]="submitted && form.get('vehicleId')?.invalid"
-              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
-              <option [value]="null" disabled>Izaberi vozilo</option>
-              <option *ngFor="let v of vehicles" [value]="v.id">
-                {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
-              </option>
-            </select>
-            <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">
-              Izaberi vozilo
-            </span>
-          </div>
-          <div class="form-field" style="grid-column: span 2;">
-            <label>Opis radova *</label>
-            <input formControlName="description" placeholder="npr. Zamena ulja i filtera"
-              [class.error]="submitted && form.get('description')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('description')?.invalid">
-              Obavezno polje
-            </span>
-          </div>
-          <div class="form-field" style="justify-content: flex-end;">
-            <button type="submit" class="btn btn-primary">
-              <i class="pi pi-plus"></i> Kreiraj nalog
-            </button>
-          </div>
-        </div>
-      </form>
+    <div class="page-header" style="display:flex; align-items:center; justify-content:space-between;">
+      <div>
+        <h1>Servisni nalozi</h1>
+        <p>Upravljanje servisnim nalozima po vozilima</p>
+      </div>
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="pi pi-plus"></i> Novi nalog
+      </button>
     </div>
 
     <div class="data-card">
@@ -96,12 +67,49 @@ import { Vehicle } from '../models/vehicle';
         </tbody>
       </table>
     </div>
+
+    <!-- Modal -->
+    <p-dialog
+      header="Novi servisni nalog"
+      [(visible)]="modalVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '480px'}"
+      styleClass="dark-dialog">
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+        <div class="form-field">
+          <label>Vozilo *</label>
+          <select formControlName="vehicleId"
+            [class.error]="submitted && form.get('vehicleId')?.invalid"
+            style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+            <option [ngValue]="null" disabled>Izaberi vozilo</option>
+            <option *ngFor="let v of vehicles" [ngValue]="v.id">
+              {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
+            </option>
+          </select>
+          <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+        </div>
+        <div class="form-field">
+          <label>Opis radova *</label>
+          <input formControlName="description" placeholder="npr. Zamena ulja i filtera"
+            [class.error]="submitted && form.get('description')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('description')?.invalid">Obavezno polje</span>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeModal()">Otkaži</button>
+          <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
+        </div>
+      </form>
+    </p-dialog>
   `
 })
 export class ServiceOrdersComponent implements OnInit {
   orders: ServiceOrder[] = [];
   vehicles: Vehicle[] = [];
   submitted = false;
+  modalVisible = false;
 
   form = this.fb.group({
     vehicleId: [null as number | null, Validators.required],
@@ -119,12 +127,21 @@ export class ServiceOrdersComponent implements OnInit {
     this.api.getServiceOrders().subscribe(orders => this.orders = orders);
   }
 
+  openModal() {
+    this.form.reset();
+    this.submitted = false;
+    this.modalVisible = true;
+  }
+
+  closeModal() {
+    this.modalVisible = false;
+  }
+
   onSubmit() {
     this.submitted = true;
     if (this.form.invalid) return;
     this.api.createServiceOrder(this.form.getRawValue() as any).subscribe(() => {
-      this.form.reset();
-      this.submitted = false;
+      this.closeModal();
       this.load();
     });
   }
