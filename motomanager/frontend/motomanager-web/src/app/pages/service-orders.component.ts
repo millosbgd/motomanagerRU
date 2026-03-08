@@ -86,88 +86,88 @@ import { ServiceActivity } from '../models/service-activity';
       styleClass="dark-dialog"
       (onHide)="closeModal()">
 
-      <!-- Tab bar -->
-      <div style="display:flex; gap:0; border-bottom:1px solid #1e293b; margin-bottom:20px;">
-        <button
-          style="padding:8px 20px; border:none; border-bottom:2px solid transparent; background:transparent; font-size:14px; cursor:pointer; transition:all 0.15s;"
-          [style.borderBottomColor]="activeFormTab === 'details' ? '#3b82f6' : 'transparent'"
-          [style.color]="activeFormTab === 'details' ? '#93c5fd' : '#64748b'"
-          (click)="activeFormTab = 'details'">
-          Detalji
-        </button>
-      </div>
+      <!-- Forma -->
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px;">
 
-      <!-- Tab: Detalji -->
-      <div *ngIf="activeFormTab === 'details'">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Vozilo (samo za novi nalog) -->
+        <div class="form-field" *ngIf="!editingOrder">
+          <label>Vozilo *</label>
+          <select formControlName="vehicleId"
+            [class.error]="submitted && form.get('vehicleId')?.invalid"
+            style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+            <option [ngValue]="null" disabled>Izaberi vozilo</option>
+            <option *ngFor="let v of vehicles" [ngValue]="v.id">
+              {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
+            </option>
+          </select>
+          <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+        </div>
 
-          <!-- Vozilo (samo za novi nalog) -->
-          <div class="form-field" *ngIf="!editingOrder">
-            <label>Vozilo *</label>
-            <select formControlName="vehicleId"
-              [class.error]="submitted && form.get('vehicleId')?.invalid"
-              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
-              <option [ngValue]="null" disabled>Izaberi vozilo</option>
-              <option *ngFor="let v of vehicles" [ngValue]="v.id">
-                {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
-              </option>
-            </select>
-            <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+        <!-- Vozilo prikaz (samo za edit) -->
+        <div class="form-field" *ngIf="editingOrder">
+          <label>Vozilo</label>
+          <div style="padding:10px 12px; background:#0f172a; border:1px solid #1e293b; border-radius:8px; color:#94a3b8; font-size:14px;">
+            {{ getRegistration(editingOrder.vehicleId) }}
           </div>
+        </div>
 
-          <!-- Vozilo prikaz (samo za edit) -->
-          <div class="form-field" *ngIf="editingOrder">
-            <label>Vozilo</label>
-            <div style="padding:10px 12px; background:#0f172a; border:1px solid #1e293b; border-radius:8px; color:#94a3b8; font-size:14px;">
-              {{ getRegistration(editingOrder.vehicleId) }}
-            </div>
-          </div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-            <div class="form-field">
-              <label>Datum servisa *</label>
-              <input type="date" formControlName="date"
-                [class.error]="submitted && form.get('date')?.invalid"
-                style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
-              <span class="field-error" *ngIf="submitted && form.get('date')?.invalid">Obavezno polje</span>
-            </div>
-            <div class="form-field">
-              <label>Kilometraža *</label>
-              <input type="number" formControlName="mileage" placeholder="npr. 45000" min="0"
-                [class.error]="submitted && form.get('mileage')?.invalid"
-                style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
-              <span class="field-error" *ngIf="submitted && form.get('mileage')?.invalid">Unesite kilometražu</span>
-            </div>
-          </div>
-
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
           <div class="form-field">
-            <label>Opis radova *</label>
-            <input formControlName="description" placeholder="npr. Zamena ulja i filtera"
-              [class.error]="submitted && form.get('description')?.invalid" />
-            <span class="field-error" *ngIf="submitted && form.get('description')?.invalid">Obavezno polje</span>
+            <label>Datum servisa *</label>
+            <input type="date" formControlName="date"
+              [class.error]="submitted && form.get('date')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+            <span class="field-error" *ngIf="submitted && form.get('date')?.invalid">Obavezno polje</span>
           </div>
-
-          <!-- Status (samo za edit) -->
-          <div class="form-field" *ngIf="editingOrder">
-            <label>Status</label>
-            <select formControlName="status"
-              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
-              <option value="Open">Otvoreno</option>
-              <option value="InProgress">U toku</option>
-              <option value="Closed">Zatvoreno</option>
-            </select>
+          <div class="form-field">
+            <label>Kilometraža *</label>
+            <input type="number" formControlName="mileage" placeholder="npr. 45000" min="0"
+              [class.error]="submitted && form.get('mileage')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+            <span class="field-error" *ngIf="submitted && form.get('mileage')?.invalid">Unesite kilometražu</span>
           </div>
+        </div>
 
-          <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:4px;">
-            <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeModal()">Otkaži</button>
-            <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
-          </div>
-        </form>
+        <div class="form-field">
+          <label>Opis radova *</label>
+          <input formControlName="description" placeholder="npr. Zamena ulja i filtera"
+            [class.error]="submitted && form.get('description')?.invalid" />
+          <span class="field-error" *ngIf="submitted && form.get('description')?.invalid">Obavezno polje</span>
+        </div>
 
-        <!-- Aktivnosti (samo za edit) -->
-        <div *ngIf="editingOrder" style="margin-top:28px; border-top:1px solid #1e293b; padding-top:20px;">
-          <h3 style="font-size:15px; color:#94a3b8; margin:0 0 14px; font-weight:600;">Aktivnosti na nalogu</h3>
+        <!-- Status (samo za edit) -->
+        <div class="form-field" *ngIf="editingOrder">
+          <label>Status</label>
+          <select formControlName="status"
+            style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+            <option value="Open">Otvoreno</option>
+            <option value="InProgress">U toku</option>
+            <option value="Closed">Zatvoreno</option>
+          </select>
+        </div>
 
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:4px;">
+          <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeModal()">Otkaži</button>
+          <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
+        </div>
+      </form>
+
+      <!-- Tabovi (samo za edit) -->
+      <div *ngIf="editingOrder" style="margin-top:24px; border-top:1px solid #1e293b; padding-top:0;">
+
+        <!-- Tab bar -->
+        <div style="display:flex; gap:0; border-bottom:1px solid #1e293b; margin-bottom:16px;">
+          <button
+            style="padding:10px 20px; border:none; border-bottom:2px solid transparent; background:transparent; font-size:14px; cursor:pointer; transition:all 0.15s;"
+            [style.borderBottomColor]="activeFormTab === 'activities' ? '#3b82f6' : 'transparent'"
+            [style.color]="activeFormTab === 'activities' ? '#93c5fd' : '#64748b'"
+            (click)="activeFormTab = 'activities'">
+            Aktivnosti
+          </button>
+        </div>
+
+        <!-- Tab: Aktivnosti -->
+        <div *ngIf="activeFormTab === 'activities'">
           <div *ngIf="orderActivitiesLoading" style="text-align:center; padding:16px; color:#64748b;">
             <i class="pi pi-spin pi-spinner"></i> Učitavanje...
           </div>
@@ -244,7 +244,7 @@ export class ServiceOrdersComponent implements OnInit {
   openModal() {
     this.editingOrder = null;
     this.submitted = false;
-    this.activeFormTab = 'details';
+    this.activeFormTab = 'activities';
     this.form.reset({
       vehicleId: null,
       description: '',
@@ -260,7 +260,7 @@ export class ServiceOrdersComponent implements OnInit {
   openEdit(order: ServiceOrder) {
     this.editingOrder = order;
     this.submitted = false;
-    this.activeFormTab = 'details';
+    this.activeFormTab = 'activities';
     this.orderActivities = [];
     this.selectedActivityId = null;
     this.form.reset({
