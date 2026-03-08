@@ -120,11 +120,16 @@ import { Vehicle } from '../models/vehicle';
 
         <!-- Vozila klijenta -->
         <div *ngIf="editClient" style="border-top:1px solid #1e293b; padding-top:16px; margin-top:4px;">
-          <div style="font-size:12px; color:#475569; margin-bottom:10px;">Vozila klijenta</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div style="font-size:12px; color:#475569;">Vozila klijenta</div>
+            <button type="button" class="btn" style="padding:4px 10px; background:#1e3a5f; color:#94a3b8; font-size:12px;" (click)="openVehicleAdd()">
+              <i class="pi pi-plus"></i> Dodaj vozilo
+            </button>
+          </div>
           <div *ngIf="vehiclesFor(editClient.id).length === 0" style="color:#475569; font-size:13px; font-style:italic; padding:8px 0;">Nema dodeljenih vozila</div>
           <table *ngIf="vehiclesFor(editClient.id).length > 0" style="width:100%; border-collapse:collapse; font-size:13px;">
             <thead>
-              <tr style="color:#475569; text-transform:uppercase; font-size:11px; letter-spacing:0.06em;">
+              <tr style="color:#475569; font-size:11px;">
                 <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Registracija</th>
                 <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Marka</th>
                 <th style="padding:4px 12px 8px 0; text-align:left; font-weight:600;">Model</th>
@@ -133,7 +138,9 @@ import { Vehicle } from '../models/vehicle';
             </thead>
             <tbody>
               <tr *ngFor="let v of vehiclesFor(editClient.id)" style="border-top:1px solid #1e293b;" [style.opacity]="v.isActive ? '1' : '0.45'">
-                <td style="padding:7px 12px 7px 0; color:#e2e8f0; font-weight:600;">{{ v.registration }}</td>
+                <td style="padding:7px 12px 7px 0;">
+                  <a (click)="openVehicleEdit(v)" style="color:#60a5fa; cursor:pointer; text-decoration:underline; font-weight:600;">{{ v.registration }}</a>
+                </td>
                 <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.make }}</td>
                 <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.model }}</td>
                 <td style="padding:7px 0; color:#94a3b8;">{{ v.year ?? '—' }}</td>
@@ -164,6 +171,51 @@ import { Vehicle } from '../models/vehicle';
         <button class="btn" style="background:#b71c1c; color:#fff;" (click)="confirmAction()"><i class="pi pi-trash"></i> Obriši</button>
       </div>
     </p-dialog>
+
+    <!-- Vozilo modal -->
+    <p-dialog
+      [header]="editingVehicle ? 'Izmeni vozilo' : 'Novo vozilo'"
+      [(visible)]="vehicleModalVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '480px'}"
+      styleClass="dark-dialog">
+      <form [formGroup]="vehicleForm" (ngSubmit)="onVehicleSubmit()" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+        <div class="form-field">
+          <label>Registracija *</label>
+          <input formControlName="registration" placeholder="npr. BG-123-AB"
+            [class.error]="vSubmitted && vehicleForm.get('registration')?.invalid" />
+          <span class="field-error" *ngIf="vSubmitted && vehicleForm.get('registration')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Marka *</label>
+          <input formControlName="make" placeholder="npr. BMW"
+            [class.error]="vSubmitted && vehicleForm.get('make')?.invalid" />
+          <span class="field-error" *ngIf="vSubmitted && vehicleForm.get('make')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Model *</label>
+          <input formControlName="model" placeholder="npr. R 1250 GS"
+            [class.error]="vSubmitted && vehicleForm.get('model')?.invalid" />
+          <span class="field-error" *ngIf="vSubmitted && vehicleForm.get('model')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Godina</label>
+          <input formControlName="year" type="number" placeholder="npr. 2022" />
+        </div>
+        <div class="form-field">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" formControlName="isActive" style="width:16px; height:16px; accent-color:#003580;" />
+            Aktivno
+          </label>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="vehicleModalVisible = false">Otkaži</button>
+          <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
+        </div>
+      </form>
+    </p-dialog>
   `
 })
 export class ClientsComponent implements OnInit {
@@ -174,9 +226,20 @@ export class ClientsComponent implements OnInit {
   submitted = false;
   modalVisible = false;
   editClient: Client | null = null;
+  vehicleModalVisible = false;
+  editingVehicle: Vehicle | null = null;
+  vSubmitted = false;
   confirmVisible = false;
   confirmMessage = '';
   private pendingDelete?: () => void;
+
+  vehicleForm = this.fb.group({
+    registration: ['', Validators.required],
+    make: ['', Validators.required],
+    model: ['', Validators.required],
+    year: [null as number | null],
+    isActive: [true]
+  });
 
   form = this.fb.group({
     name: ['', Validators.required],
@@ -204,6 +267,58 @@ export class ClientsComponent implements OnInit {
 
   vehiclesFor(clientId: number): Vehicle[] {
     return this.allVehicles.filter(v => v.clientId === clientId);
+  }
+
+  openVehicleAdd() {
+    this.editingVehicle = null;
+    this.vehicleForm.reset({ isActive: true });
+    this.vSubmitted = false;
+    this.vehicleModalVisible = true;
+  }
+
+  openVehicleEdit(vehicle: Vehicle) {
+    this.editingVehicle = vehicle;
+    this.vehicleForm.setValue({
+      registration: vehicle.registration,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year ?? null,
+      isActive: vehicle.isActive
+    });
+    this.vSubmitted = false;
+    this.vehicleModalVisible = true;
+  }
+
+  onVehicleSubmit() {
+    this.vSubmitted = true;
+    if (this.vehicleForm.invalid) return;
+    const val = this.vehicleForm.getRawValue();
+    const clientId = this.editClient!.id;
+
+    if (this.editingVehicle) {
+      this.api.updateVehicle(this.editingVehicle.id, {
+        registration: val.registration!,
+        make: val.make!,
+        model: val.model!,
+        year: val.year ?? undefined,
+        isActive: val.isActive ?? true,
+        clientId
+      }).subscribe(() => {
+        this.vehicleModalVisible = false;
+        this.api.getVehicles().subscribe(v => this.allVehicles = v);
+      });
+    } else {
+      this.api.createVehicle({
+        registration: val.registration!,
+        make: val.make!,
+        model: val.model!,
+        year: val.year ?? undefined,
+        clientId
+      }).subscribe(() => {
+        this.vehicleModalVisible = false;
+        this.api.getVehicles().subscribe(v => this.allVehicles = v);
+      });
+    }
   }
 
   openAddModal() {
