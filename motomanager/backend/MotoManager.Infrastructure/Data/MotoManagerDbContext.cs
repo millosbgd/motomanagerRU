@@ -13,6 +13,7 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<ServiceOrderActivity> ServiceOrderActivities => Set<ServiceOrderActivity>();
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<Material> Materials => Set<Material>();
+    public DbSet<ServiceOperation> ServiceOperations => Set<ServiceOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,6 +106,14 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
                 .WithMany()
                 .HasForeignKey(m => m.UnitOfMeasureId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ServiceOperation>(entity =>
+        {
+            entity.ToTable("service_operations");
+            entity.HasKey(o => o.Id);
+            entity.Property(o => o.Name).HasMaxLength(128).IsRequired();
+            entity.Property(o => o.WorkHours).HasColumnType("numeric(6,2)");
         });
     }
 

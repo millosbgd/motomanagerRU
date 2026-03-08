@@ -6,7 +6,7 @@ import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
 import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
-import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest } from '../models/material';
+import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest, ServiceOperation, CreateServiceOperationRequest, UpdateServiceOperationRequest } from '../models/material';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -184,5 +184,21 @@ export class ApiService {
 
   deleteMaterial(id: number) {
     return this.http.delete(`${this.baseUrl}/api/materials/${id}`);
+  }
+
+  getServiceOperations() {
+    return this.http.get<ServiceOperation[]>(`${this.baseUrl}/api/service-operations`);
+  }
+
+  createServiceOperation(request: CreateServiceOperationRequest) {
+    return this.http.post<ServiceOperation>(`${this.baseUrl}/api/service-operations`, request);
+  }
+
+  updateServiceOperation(id: number, request: UpdateServiceOperationRequest) {
+    return this.http.put<ServiceOperation>(`${this.baseUrl}/api/service-operations/${id}`, request);
+  }
+
+  deleteServiceOperation(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-operations/${id}`);
   }
 }

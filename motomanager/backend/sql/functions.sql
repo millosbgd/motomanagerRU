@@ -95,6 +95,30 @@ LANGUAGE sql STABLE AS $$
     SELECT * FROM materials WHERE id = p_id;
 $$;
 
+-- ─── SERVISNE OPERACIJE ──────────────────────────────────────
+
+-- Pokrenuti jednom (DDL):
+-- CREATE TABLE IF NOT EXISTS public.service_operations (
+--     id bigserial PRIMARY KEY,
+--     name varchar(128) NOT NULL,
+--     work_hours numeric(6,2) NOT NULL DEFAULT 0,
+--     is_active boolean NOT NULL DEFAULT true,
+--     created_at timestamptz NOT NULL DEFAULT now(),
+--     updated_at timestamptz NOT NULL DEFAULT now()
+-- );
+
+CREATE OR REPLACE FUNCTION fn_get_all_service_operations()
+RETURNS SETOF service_operations
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_operations ORDER BY name;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_service_operation_by_id(p_id bigint)
+RETURNS SETOF service_operations
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_operations WHERE id = p_id;
+$$;
+
 -- ─── SERVISNE AKTIVNOSTI ─────────────────────────────────────
 
 -- Pokrenuti jednom (DDL):

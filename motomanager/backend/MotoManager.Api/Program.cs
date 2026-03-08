@@ -41,6 +41,8 @@ builder.Services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
 builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
 builder.Services.AddScoped<IMaterialService, MaterialService>();
+builder.Services.AddScoped<IServiceOperationRepository, ServiceOperationRepository>();
+builder.Services.AddScoped<IServiceOperationService, ServiceOperationService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -235,6 +237,29 @@ materialGroup.MapPut("/{id:long}", async (long id, UpdateMaterialRequest request
 });
 
 materialGroup.MapDelete("/{id:long}", async (long id, IMaterialService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
+var serviceOperationGroup = app.MapGroup("/api/service-operations");
+
+serviceOperationGroup.MapGet("/", async (IServiceOperationService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+serviceOperationGroup.MapGet("/{id:long}", async (long id, IServiceOperationService service, CancellationToken ct)
+    => await service.GetByIdAsync(id, ct) is { } o ? Results.Ok(o) : Results.NotFound());
+
+serviceOperationGroup.MapPost("/", async (CreateServiceOperationRequest request, IServiceOperationService service, CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/service-operations/{created.Id}", created);
+});
+
+serviceOperationGroup.MapPut("/{id:long}", async (long id, UpdateServiceOperationRequest request, IServiceOperationService service, CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+serviceOperationGroup.MapDelete("/{id:long}", async (long id, IServiceOperationService service, CancellationToken ct)
     => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
 
 var codebookGroup = app.MapGroup("/api/codebook");

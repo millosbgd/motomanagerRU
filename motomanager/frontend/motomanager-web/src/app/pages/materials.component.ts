@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
-import { Material, UnitOfMeasure } from '../models/material';
+import { Material, UnitOfMeasure, ServiceOperation } from '../models/material';
 
 @Component({
   standalone: true,
@@ -25,6 +25,13 @@ import { Material, UnitOfMeasure } from '../models/material';
         [style.color]="activeTab==='units' ? '#7dd3fc' : '#64748b'"
         [style.borderBottomColor]="activeTab==='units' ? '#3b82f6' : 'transparent'">
         <i class="pi pi-tag"></i> Jedinice mere
+      </button>
+      <button (click)="activeTab='operations'"
+        style="padding:10px 20px; border:none; cursor:pointer; font-size:14px; border-radius:8px 8px 0 0; border-bottom:2px solid transparent;"
+        [style.background]="activeTab==='operations' ? '#1e3a5f' : 'transparent'"
+        [style.color]="activeTab==='operations' ? '#7dd3fc' : '#64748b'"
+        [style.borderBottomColor]="activeTab==='operations' ? '#3b82f6' : 'transparent'">
+        <i class="pi pi-wrench"></i> Servisne operacije
       </button>
     </div>
 
@@ -218,7 +225,7 @@ import { Material, UnitOfMeasure } from '../models/material';
   `
 })
 export class MaterialsComponent implements OnInit {
-  activeTab: 'materials' | 'units' = 'materials';
+  activeTab: 'materials' | 'units' | 'operations' = 'materials';
 
   // Materijali
   materials: Material[] = [];
@@ -245,6 +252,19 @@ export class MaterialsComponent implements OnInit {
     isActive: [true]
   });
 
+  // Servisne operacije
+  operations: ServiceOperation[] = [];
+  opLoading = false;
+  opSubmitted = false;
+  opModalVisible = false;
+  editOperation: ServiceOperation | null = null;
+
+  opForm = this.fb.group({
+    name: ['', Validators.required],
+    workHours: [null as number | null, [Validators.required, Validators.min(0)]],
+    isActive: [true]
+  });
+
   // Confirm brisanje
   confirmVisible = false;
   confirmMessage = '';
@@ -259,6 +279,7 @@ export class MaterialsComponent implements OnInit {
   ngOnInit() {
     this.loadMaterials();
     this.loadUnits();
+    this.loadOperations();
   }
 
   // ─── Materijali ───────────────────────────────────────────
@@ -359,5 +380,52 @@ export class MaterialsComponent implements OnInit {
   doDelete() {
     this.confirmVisible = false;
     this.pendingDelete?.();
+  }
+
+  // ─── Servisne operacije ───────────────────────────────────
+
+  loadOperations() {
+    this.opLoading = true;
+    this.api.getServiceOperations().subscribe({
+      next: data => { this.operations = data; this.opLoading = false; },
+      error: () => { this.opLoading = false; }
+    });
+  }
+
+  openAddOperation() {
+    this.editOperation = null;
+    this.opForm.reset({ name: '', workHours: null, isActive: true });
+    this.opSubmitted = false;
+    this.opModalVisible = true;
+  }
+
+  openEditOperation(o: ServiceOperation) {
+    this.editOperation = o;
+    this.opForm.setValue({ name: o.name, workHours: o.workHours, isActive: o.isActive });
+    this.opSubmitted = false;
+    this.opModalVisible = true;
+  }
+
+  onOpSubmit() {
+    this.opSubmitted = true;
+    if (this.opForm.invalid) return;
+    const val = this.opForm.getRawValue();
+
+    if (this.editOperation) {
+      this.api.updateServiceOperation(this.editOperation.id, {
+        name: val.name!,
+        workHours: val.workHours!,
+        isActive: val.isActive ?? true
+      }).subscribe(() => { this.opModalVisible = false; this.loadOperations(); });
+    } else {
+      this.api.createServiceOperation({ name: val.name!, workHours: val.workHours! })
+        .subscribe(() => { this.opModalVisible = false; this.loadOperations(); });
+    }
+  }
+
+  confirmDeleteOperation(o: ServiceOperation) {
+    this.confirmMessage = `Obriši operaciju "${o.name}"?`;
+    this.pendingDelete = () => this.api.deleteServiceOperation(o.id).subscribe(() => this.loadOperations());
+    this.confirmVisible = true;
   }
 }
