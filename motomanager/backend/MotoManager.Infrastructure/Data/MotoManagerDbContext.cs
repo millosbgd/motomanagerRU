@@ -11,6 +11,8 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ServiceActivity> ServiceActivities => Set<ServiceActivity>();
     public DbSet<ServiceOrderActivity> ServiceOrderActivities => Set<ServiceOrderActivity>();
+    public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
+    public DbSet<Material> Materials => Set<Material>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,26 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.HasOne(soa => soa.ServiceActivity)
                 .WithMany()
                 .HasForeignKey(soa => soa.ServiceActivityId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<UnitOfMeasure>(entity =>
+        {
+            entity.ToTable("unit_of_measures");
+            entity.HasKey(u => u.Id);
+            entity.HasIndex(u => u.Name).IsUnique();
+            entity.Property(u => u.Name).HasMaxLength(64).IsRequired();
+        });
+
+        modelBuilder.Entity<Material>(entity =>
+        {
+            entity.ToTable("materials");
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.Name).HasMaxLength(128).IsRequired();
+            entity.Property(m => m.UnitOfMeasureId).HasColumnName("unit_of_measure_id");
+            entity.HasOne(m => m.UnitOfMeasure)
+                .WithMany()
+                .HasForeignKey(m => m.UnitOfMeasureId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -165,6 +187,32 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
                 else if (entry.State == EntityState.Modified)
                 {
                     activity.UpdatedAt = now;
+                }
+            }
+
+            if (entry.Entity is UnitOfMeasure unit)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    unit.CreatedAt = now;
+                    unit.UpdatedAt = now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    unit.UpdatedAt = now;
+                }
+            }
+
+            if (entry.Entity is Material material)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    material.CreatedAt = now;
+                    material.UpdatedAt = now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    material.UpdatedAt = now;
                 }
             }
         }

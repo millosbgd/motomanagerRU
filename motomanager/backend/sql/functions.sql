@@ -67,6 +67,34 @@ LANGUAGE sql STABLE AS $$
     SELECT * FROM codebook_entries WHERE id = p_id;
 $$;
 
+-- ─── JEDINICE MERE ───────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION fn_get_all_unit_of_measures()
+RETURNS SETOF unit_of_measures
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM unit_of_measures ORDER BY name;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_unit_of_measure_by_id(p_id bigint)
+RETURNS SETOF unit_of_measures
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM unit_of_measures WHERE id = p_id;
+$$;
+
+-- ─── MATERIJALI ──────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION fn_get_all_materials()
+RETURNS SETOF materials
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM materials ORDER BY name;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_material_by_id(p_id bigint)
+RETURNS SETOF materials
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM materials WHERE id = p_id;
+$$;
+
 -- ─── SERVISNE AKTIVNOSTI ─────────────────────────────────────
 
 -- Pokrenuti jednom (DDL):

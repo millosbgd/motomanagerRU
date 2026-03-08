@@ -37,6 +37,10 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IServiceActivityRepository, ServiceActivityRepository>();
 builder.Services.AddScoped<IServiceActivityService, ServiceActivityService>();
+builder.Services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
+builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
+builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
+builder.Services.AddScoped<IMaterialService, MaterialService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -187,6 +191,52 @@ activityGroup.MapPut("/{id:long}", async (long id, UpdateServiceActivityRequest 
 activityGroup.MapDelete("/{id:long}", async (long id, IServiceActivityService service, CancellationToken ct)
     => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
 
+var unitOfMeasureGroup = app.MapGroup("/api/unit-of-measures");
+
+unitOfMeasureGroup.MapGet("/", async (IUnitOfMeasureService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+unitOfMeasureGroup.MapGet("/{id:long}", async (long id, IUnitOfMeasureService service, CancellationToken ct)
+    => await service.GetByIdAsync(id, ct) is { } u ? Results.Ok(u) : Results.NotFound());
+
+unitOfMeasureGroup.MapPost("/", async (CreateUnitOfMeasureRequest request, IUnitOfMeasureService service, CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/unit-of-measures/{created.Id}", created);
+});
+
+unitOfMeasureGroup.MapPut("/{id:long}", async (long id, UpdateUnitOfMeasureRequest request, IUnitOfMeasureService service, CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+unitOfMeasureGroup.MapDelete("/{id:long}", async (long id, IUnitOfMeasureService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
+var materialGroup = app.MapGroup("/api/materials");
+
+materialGroup.MapGet("/", async (IMaterialService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+materialGroup.MapGet("/{id:long}", async (long id, IMaterialService service, CancellationToken ct)
+    => await service.GetByIdAsync(id, ct) is { } m ? Results.Ok(m) : Results.NotFound());
+
+materialGroup.MapPost("/", async (CreateMaterialRequest request, IMaterialService service, CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/materials/{created.Id}", created);
+});
+
+materialGroup.MapPut("/{id:long}", async (long id, UpdateMaterialRequest request, IMaterialService service, CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+materialGroup.MapDelete("/{id:long}", async (long id, IMaterialService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
 var codebookGroup = app.MapGroup("/api/codebook");
 
 codebookGroup.MapGet("/", async (ICodebookService service, CancellationToken ct)
@@ -303,6 +353,24 @@ using (var scope = app.Services.CreateScope())
         CREATE TABLE IF NOT EXISTS public.service_activities (
             id bigserial PRIMARY KEY,
             name varchar(128) NOT NULL,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS public.unit_of_measures (
+            id bigserial PRIMARY KEY,
+            name varchar(64) NOT NULL,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now(),
+            UNIQUE (name)
+        );
+
+        CREATE TABLE IF NOT EXISTS public.materials (
+            id bigserial PRIMARY KEY,
+            name varchar(128) NOT NULL,
+            unit_of_measure_id bigint NOT NULL REFERENCES public.unit_of_measures(id) ON DELETE RESTRICT,
             is_active boolean NOT NULL DEFAULT true,
             created_at timestamptz NOT NULL DEFAULT now(),
             updated_at timestamptz NOT NULL DEFAULT now()

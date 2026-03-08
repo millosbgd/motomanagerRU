@@ -8,6 +8,19 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(MotoManagerDbContext dbContext, CancellationToken ct)
     {
+        if (!await dbContext.UnitOfMeasures.AnyAsync(ct))
+        {
+            dbContext.UnitOfMeasures.AddRange(
+                new UnitOfMeasure { Name = "Kom", IsActive = true },
+                new UnitOfMeasure { Name = "Lit", IsActive = true },
+                new UnitOfMeasure { Name = "Set", IsActive = true },
+                new UnitOfMeasure { Name = "Kg", IsActive = true },
+                new UnitOfMeasure { Name = "gr", IsActive = true }
+            );
+
+            await dbContext.SaveChangesAsync(ct);
+        }
+
         if (await dbContext.Vehicles.AnyAsync(ct))
         {
             return;
