@@ -6,6 +6,7 @@ import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
 import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
+import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest } from '../models/material';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -147,5 +148,41 @@ export class ApiService {
 
   removeActivityFromOrder(serviceOrderId: number, serviceActivityId: number) {
     return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}`);
+  }
+
+  // ─── Jedinice mere ────────────────────────────────────────
+
+  getUnitsOfMeasure() {
+    return this.http.get<UnitOfMeasure[]>(`${this.baseUrl}/api/units-of-measure`);
+  }
+
+  createUnitOfMeasure(request: CreateUnitOfMeasureRequest) {
+    return this.http.post<UnitOfMeasure>(`${this.baseUrl}/api/units-of-measure`, request);
+  }
+
+  updateUnitOfMeasure(id: number, request: UpdateUnitOfMeasureRequest) {
+    return this.http.put<UnitOfMeasure>(`${this.baseUrl}/api/units-of-measure/${id}`, request);
+  }
+
+  deleteUnitOfMeasure(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/units-of-measure/${id}`);
+  }
+
+  // ─── Materijali ───────────────────────────────────────────
+
+  getMaterials() {
+    return this.http.get<Material[]>(`${this.baseUrl}/api/materials`);
+  }
+
+  createMaterial(request: CreateMaterialRequest) {
+    return this.http.post<Material>(`${this.baseUrl}/api/materials`, request);
+  }
+
+  updateMaterial(id: number, request: UpdateMaterialRequest) {
+    return this.http.put<Material>(`${this.baseUrl}/api/materials/${id}`, request);
+  }
+
+  deleteMaterial(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/materials/${id}`);
   }
 }

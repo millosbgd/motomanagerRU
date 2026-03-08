@@ -5,6 +5,7 @@ import { ServiceOrdersComponent } from './pages/service-orders.component';
 import { CodebooksComponent } from './pages/codebooks.component';
 import { ClientsComponent } from './pages/clients.component';
 import { ServiceActivitiesComponent } from './pages/service-activities.component';
+import { MaterialsComponent } from './pages/materials.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'clients', component: ClientsComponent },
   { path: 'service-orders', component: ServiceOrdersComponent },
   { path: 'service-activities', component: ServiceActivitiesComponent },
+  { path: 'materials', component: MaterialsComponent },
   { path: 'codebooks', component: CodebooksComponent },
   { path: '**', redirectTo: '' }
 ];
