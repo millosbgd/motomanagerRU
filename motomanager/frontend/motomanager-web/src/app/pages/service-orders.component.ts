@@ -33,6 +33,7 @@ import { Client } from '../models/client';
         <thead>
           <tr>
             <th>#</th>
+            <th>Klijent</th>
             <th>Vozilo</th>
             <th>Opis</th>
             <th>Status</th>
@@ -43,13 +44,14 @@ import { Client } from '../models/client';
         </thead>
         <tbody>
           <tr *ngIf="orders.length === 0" class="empty-row">
-            <td colspan="7">
+            <td colspan="8">
               <i class="pi pi-wrench" style="font-size:24px; color:#334155; display:block; margin-bottom:8px;"></i>
               Nema naloga.
             </td>
           </tr>
           <tr *ngFor="let o of orders">
             <td style="color:#475569; font-size:13px;">{{ o.id }}</td>
+            <td style="color:#94a3b8; font-size:13px;">{{ getClientForVehicle(o.vehicleId) }}</td>
             <td><strong style="color:#f1f5f9;">{{ getRegistration(o.vehicleId) }}</strong></td>
             <td>{{ o.description }}</td>
             <td>
