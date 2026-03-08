@@ -141,6 +141,95 @@ import { Material, UnitOfMeasure, ServiceOperation } from '../models/material';
       </div>
     </ng-container>
 
+    <!-- ─── TAB: SERVISNE OPERACIJE ─── -->
+    <ng-container *ngIf="activeTab === 'operations'">
+      <div class="page-header" style="display:flex; align-items:center; justify-content:flex-end; margin-bottom:16px;">
+        <button class="btn btn-primary" (click)="openAddOperation()">
+          <i class="pi pi-plus"></i> Nova operacija
+        </button>
+      </div>
+
+      <div class="data-card">
+        <div *ngIf="opLoading" style="display:flex; align-items:center; gap:12px; padding:32px; color:#64748b; justify-content:center;">
+          <i class="pi pi-spin pi-spinner" style="font-size:20px;"></i>
+          <span>Učitavanje...</span>
+        </div>
+
+        <table class="data-table" *ngIf="!opLoading">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Naziv</th>
+              <th>Radni sati</th>
+              <th>Status</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="operations.length === 0" class="empty-row">
+              <td colspan="5">
+                <i class="pi pi-wrench" style="font-size:24px; color:#334155; display:block; margin-bottom:8px;"></i>
+                Nema servisnih operacija.
+              </td>
+            </tr>
+            <tr *ngFor="let o of operations" [style.opacity]="o.isActive ? '1' : '0.45'">
+              <td style="color:#475569; font-size:13px;">{{ o.id }}</td>
+              <td><strong style="color:#f1f5f9;">{{ o.name }}</strong></td>
+              <td style="color:#94a3b8;">{{ o.workHours | number:'1.2-2' }} h</td>
+              <td>
+                <span class="badge" [class.badge-open]="o.isActive" [class.badge-closed]="!o.isActive">
+                  {{ o.isActive ? 'Aktivan' : 'Neaktivan' }}
+                </span>
+              </td>
+              <td style="display:flex; gap:8px;">
+                <button class="btn" style="padding:6px 12px; background:#1e3a5f; color:#94a3b8; font-size:13px;" (click)="openEditOperation(o)">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="btn" style="padding:6px 12px; background:#3b0f0f; color:#f87171; font-size:13px;" (click)="confirmDeleteOperation(o)">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <!-- Modal: Servisna operacija -->
+    <p-dialog
+      [header]="editOperation ? 'Izmeni operaciju' : 'Nova servisna operacija'"
+      [(visible)]="opModalVisible"
+      [modal]="true" [closable]="true" [draggable]="false"
+      [style]="{width: '420px'}"
+      styleClass="dark-dialog">
+
+      <form [formGroup]="opForm" (ngSubmit)="onOpSubmit()" style="display:flex; flex-direction:column; gap:16px; padding:8px 0;">
+        <div class="form-field">
+          <label>Naziv *</label>
+          <input formControlName="name" placeholder="npr. Zamena ulja"
+            [class.error]="opSubmitted && opForm.get('name')?.invalid" />
+          <span class="field-error" *ngIf="opSubmitted && opForm.get('name')?.invalid">Obavezno polje</span>
+        </div>
+        <div class="form-field">
+          <label>Radni sati *</label>
+          <input formControlName="workHours" type="number" min="0" step="0.25" placeholder="npr. 1.5"
+            [class.error]="opSubmitted && opForm.get('workHours')?.invalid"
+            style="-moz-appearance:textfield;" />
+          <span class="field-error" *ngIf="opSubmitted && opForm.get('workHours')?.invalid">Obavezno polje (≥ 0)</span>
+        </div>
+        <div class="form-field" *ngIf="editOperation">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" formControlName="isActive" style="width:16px; height:16px; accent-color:#003580;" />
+            Aktivan
+          </label>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="opModalVisible = false">Otkaži</button>
+          <button type="submit" class="btn btn-primary"><i class="pi pi-check"></i> Sačuvaj</button>
+        </div>
+      </form>
+    </p-dialog>
+
     <!-- Modal: Materijal -->
     <p-dialog
       [header]="editMaterial ? 'Izmeni materijal' : 'Novi materijal'"
