@@ -191,7 +191,7 @@ activityGroup.MapPut("/{id:long}", async (long id, UpdateServiceActivityRequest 
 activityGroup.MapDelete("/{id:long}", async (long id, IServiceActivityService service, CancellationToken ct)
     => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
 
-var unitOfMeasureGroup = app.MapGroup("/api/unit-of-measures");
+var unitOfMeasureGroup = app.MapGroup("/api/units-of-measure");
 
 unitOfMeasureGroup.MapGet("/", async (IUnitOfMeasureService service, CancellationToken ct)
     => Results.Ok(await service.GetAllAsync(ct)));
