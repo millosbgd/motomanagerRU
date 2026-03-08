@@ -9,11 +9,14 @@ public class ClientRepository(MotoManagerDbContext db) : IClientRepository
 {
     public async Task<IEnumerable<Client>> GetAllAsync(CancellationToken ct)
         => await db.Clients
-            .OrderBy(c => c.Name)
+            .FromSqlRaw("SELECT * FROM fn_get_all_clients()")
+            .AsNoTracking()
             .ToListAsync(ct);
 
     public Task<Client?> GetByIdAsync(long id, CancellationToken ct)
-        => db.Clients.FirstOrDefaultAsync(c => c.Id == id, ct);
+        => db.Clients
+            .FromSqlInterpolated($"SELECT * FROM fn_get_client_by_id({id})")
+            .FirstOrDefaultAsync(ct);
 
     public async Task<Client> CreateAsync(Client client, CancellationToken ct)
     {
@@ -31,7 +34,7 @@ public class ClientRepository(MotoManagerDbContext db) : IClientRepository
 
     public async Task<bool> DeleteAsync(long id, CancellationToken ct)
     {
-        var client = await db.Clients.FindAsync([id], ct);
+        var client = await GetByIdAsync(id, ct);
         if (client is null) return false;
         db.Clients.Remove(client);
         await db.SaveChangesAsync(ct);

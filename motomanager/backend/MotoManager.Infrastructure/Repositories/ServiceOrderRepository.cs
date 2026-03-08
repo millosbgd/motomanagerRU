@@ -8,10 +8,15 @@ namespace MotoManager.Infrastructure.Repositories;
 public class ServiceOrderRepository(MotoManagerDbContext dbContext) : IServiceOrderRepository
 {
     public Task<List<ServiceOrder>> GetAllAsync(CancellationToken ct)
-        => dbContext.ServiceOrders.AsNoTracking().ToListAsync(ct);
+        => dbContext.ServiceOrders
+            .FromSqlRaw("SELECT * FROM fn_get_all_service_orders()")
+            .AsNoTracking()
+            .ToListAsync(ct);
 
     public Task<ServiceOrder?> GetByIdAsync(long id, CancellationToken ct)
-        => dbContext.ServiceOrders.FirstOrDefaultAsync(s => s.Id == id, ct);
+        => dbContext.ServiceOrders
+            .FromSqlInterpolated($"SELECT * FROM fn_get_service_order_by_id({id})")
+            .FirstOrDefaultAsync(ct);
 
     public async Task AddAsync(ServiceOrder order, CancellationToken ct)
     {

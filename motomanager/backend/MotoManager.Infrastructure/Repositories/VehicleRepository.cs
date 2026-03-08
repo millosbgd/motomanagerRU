@@ -8,10 +8,17 @@ namespace MotoManager.Infrastructure.Repositories;
 public class VehicleRepository(MotoManagerDbContext dbContext) : IVehicleRepository
 {
     public Task<List<Vehicle>> GetAllAsync(CancellationToken ct)
-        => dbContext.Vehicles.AsNoTracking().Include(v => v.Client).ToListAsync(ct);
+        => dbContext.Vehicles
+            .FromSqlRaw("SELECT * FROM fn_get_all_vehicles()")
+            .AsNoTracking()
+            .Include(v => v.Client)
+            .ToListAsync(ct);
 
     public Task<Vehicle?> GetByIdAsync(long id, CancellationToken ct)
-        => dbContext.Vehicles.Include(v => v.Client).FirstOrDefaultAsync(v => v.Id == id, ct);
+        => dbContext.Vehicles
+            .FromSqlInterpolated($"SELECT * FROM fn_get_vehicle_by_id({id})")
+            .Include(v => v.Client)
+            .FirstOrDefaultAsync(ct);
 
     public async Task AddAsync(Vehicle vehicle, CancellationToken ct)
     {
