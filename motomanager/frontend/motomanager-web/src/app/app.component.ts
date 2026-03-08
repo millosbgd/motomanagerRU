@@ -28,7 +28,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             <i class="pi pi-list"></i> Aktivnosti
           </a>
           <a routerLink="/materials" routerLinkActive="active">
-            <i class="pi pi-box"></i> Materijali
+            <i class="pi pi-box"></i> Šifarnici
           </a>
         </div>
       </nav>
