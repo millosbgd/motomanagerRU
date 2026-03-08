@@ -66,3 +66,43 @@ RETURNS SETOF codebook_entries
 LANGUAGE sql STABLE AS $$
     SELECT * FROM codebook_entries WHERE id = p_id;
 $$;
+
+-- ─── SERVISNE AKTIVNOSTI ─────────────────────────────────────
+
+-- Pokrenuti jednom (DDL):
+-- CREATE TABLE IF NOT EXISTS public.service_activities (
+--     id bigserial PRIMARY KEY,
+--     name varchar(128) NOT NULL,
+--     is_active boolean NOT NULL DEFAULT true,
+--     created_at timestamptz NOT NULL DEFAULT now(),
+--     updated_at timestamptz NOT NULL DEFAULT now()
+-- );
+--
+-- CREATE TABLE IF NOT EXISTS public.service_order_activities (
+--     id bigserial PRIMARY KEY,
+--     service_order_id bigint NOT NULL REFERENCES public.service_orders(id) ON DELETE CASCADE,
+--     service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE RESTRICT,
+--     UNIQUE(service_order_id, service_activity_id)
+-- );
+
+CREATE OR REPLACE FUNCTION fn_get_all_service_activities()
+RETURNS SETOF service_activities
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_activities ORDER BY name;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_service_activity_by_id(p_id bigint)
+RETURNS SETOF service_activities
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_activities WHERE id = p_id;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_activities_by_service_order(p_service_order_id bigint)
+RETURNS SETOF service_activities
+LANGUAGE sql STABLE AS $$
+    SELECT sa.*
+    FROM service_activities sa
+    INNER JOIN service_order_activities soa ON soa.service_activity_id = sa.id
+    WHERE soa.service_order_id = p_service_order_id
+    ORDER BY sa.name;
+$$;

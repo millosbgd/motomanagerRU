@@ -35,6 +35,8 @@ builder.Services.AddScoped<ICodebookRepository, CodebookRepository>();
 builder.Services.AddScoped<ICodebookService, CodebookService>();
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IServiceActivityRepository, ServiceActivityRepository>();
+builder.Services.AddScoped<IServiceActivityService, ServiceActivityService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -153,6 +155,38 @@ orderGroup.MapPost("/{id:long}/close", async (long id, IServiceOrderService serv
         ? Results.Ok(closed)
         : Results.NotFound());
 
+orderGroup.MapGet("/{id:long}/activities", async (long id, IServiceActivityService activityService, CancellationToken ct)
+    => Results.Ok(await activityService.GetByServiceOrderAsync(id, ct)));
+
+orderGroup.MapPost("/{id:long}/activities/{activityId:long}", async (long id, long activityId, IServiceActivityService activityService, CancellationToken ct)
+    => await activityService.AddToOrderAsync(id, activityId, ct) ? Results.NoContent() : Results.Conflict());
+
+orderGroup.MapDelete("/{id:long}/activities/{activityId:long}", async (long id, long activityId, IServiceActivityService activityService, CancellationToken ct)
+    => await activityService.RemoveFromOrderAsync(id, activityId, ct) ? Results.NoContent() : Results.NotFound());
+
+var activityGroup = app.MapGroup("/api/service-activities");
+
+activityGroup.MapGet("/", async (IServiceActivityService service, CancellationToken ct)
+    => Results.Ok(await service.GetAllAsync(ct)));
+
+activityGroup.MapGet("/{id:long}", async (long id, IServiceActivityService service, CancellationToken ct)
+    => await service.GetByIdAsync(id, ct) is { } a ? Results.Ok(a) : Results.NotFound());
+
+activityGroup.MapPost("/", async (CreateServiceActivityRequest request, IServiceActivityService service, CancellationToken ct) =>
+{
+    var created = await service.CreateAsync(request, ct);
+    return Results.Created($"/api/service-activities/{created.Id}", created);
+});
+
+activityGroup.MapPut("/{id:long}", async (long id, UpdateServiceActivityRequest request, IServiceActivityService service, CancellationToken ct) =>
+{
+    var updated = await service.UpdateAsync(id, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+activityGroup.MapDelete("/{id:long}", async (long id, IServiceActivityService service, CancellationToken ct)
+    => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
 var codebookGroup = app.MapGroup("/api/codebook");
 
 codebookGroup.MapGet("/", async (ICodebookService service, CancellationToken ct)
@@ -264,6 +298,21 @@ using (var scope = app.Services.CreateScope())
             is_active boolean NOT NULL DEFAULT true,
             created_at timestamptz NOT NULL DEFAULT now(),
             updated_at timestamptz NOT NULL DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS public.service_activities (
+            id bigserial PRIMARY KEY,
+            name varchar(128) NOT NULL,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+        );
+
+        CREATE TABLE IF NOT EXISTS public.service_order_activities (
+            id bigserial PRIMARY KEY,
+            service_order_id bigint NOT NULL REFERENCES public.service_orders(id) ON DELETE CASCADE,
+            service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE RESTRICT,
+            UNIQUE(service_order_id, service_activity_id)
         );
     ");
 

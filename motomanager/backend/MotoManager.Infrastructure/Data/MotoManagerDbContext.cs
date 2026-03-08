@@ -9,6 +9,8 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<ServiceOrder> ServiceOrders => Set<ServiceOrder>();
     public DbSet<CodebookEntry> CodebookEntries => Set<CodebookEntry>();
     public DbSet<Client> Clients => Set<Client>();
+    public DbSet<ServiceActivity> ServiceActivities => Set<ServiceActivity>();
+    public DbSet<ServiceOrderActivity> ServiceOrderActivities => Set<ServiceOrderActivity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -59,6 +61,28 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.Property(c => c.Address).HasMaxLength(256);
             entity.Property(c => c.City).HasMaxLength(128);
             entity.Property(c => c.Country).HasMaxLength(64);
+        });
+
+        modelBuilder.Entity<ServiceActivity>(entity =>
+        {
+            entity.ToTable("service_activities");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Name).HasMaxLength(128).IsRequired();
+        });
+
+        modelBuilder.Entity<ServiceOrderActivity>(entity =>
+        {
+            entity.ToTable("service_order_activities");
+            entity.HasKey(soa => soa.Id);
+            entity.HasIndex(soa => new { soa.ServiceOrderId, soa.ServiceActivityId }).IsUnique();
+            entity.HasOne(soa => soa.ServiceOrder)
+                .WithMany()
+                .HasForeignKey(soa => soa.ServiceOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(soa => soa.ServiceActivity)
+                .WithMany()
+                .HasForeignKey(soa => soa.ServiceActivityId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -128,6 +152,19 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
                 else if (entry.State == EntityState.Modified)
                 {
                     client.UpdatedAt = now;
+                }
+            }
+
+            if (entry.Entity is ServiceActivity activity)
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    activity.CreatedAt = now;
+                    activity.UpdatedAt = now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    activity.UpdatedAt = now;
                 }
             }
         }
