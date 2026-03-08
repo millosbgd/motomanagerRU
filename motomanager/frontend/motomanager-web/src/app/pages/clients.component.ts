@@ -132,7 +132,7 @@ import { Vehicle } from '../models/vehicle';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let v of vehiclesFor(editClient.id)" style="border-top:1px solid #1e293b;">
+              <tr *ngFor="let v of vehiclesFor(editClient.id)" style="border-top:1px solid #1e293b;" [style.opacity]="v.isActive ? '1' : '0.45'">
                 <td style="padding:7px 12px 7px 0; color:#e2e8f0; font-weight:600;">{{ v.registration }}</td>
                 <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.make }}</td>
                 <td style="padding:7px 12px 7px 0; color:#94a3b8;">{{ v.model }}</td>
