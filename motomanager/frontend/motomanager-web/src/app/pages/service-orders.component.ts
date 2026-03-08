@@ -77,14 +77,57 @@ import { ServiceActivity } from '../models/service-activity';
 
     <!-- Modal: Novi / Uredi nalog -->
     <p-dialog
-      [header]="editingOrder ? 'Nalog #' + editingOrder.id : 'Novi servisni nalog'"
       [(visible)]="modalVisible"
       [modal]="true"
       [closable]="true"
       [draggable]="false"
-      [style]="{width: '600px'}"
+      [style]="{width: '1100px', maxWidth: '96vw'}"
       styleClass="dark-dialog"
       (onHide)="closeModal()">
+
+      <!-- Custom header -->
+      <ng-template pTemplate="header">
+
+        <!-- Novi nalog: jednostavan naslov -->
+        <span *ngIf="!editingOrder" style="font-size:18px; font-weight:600; color:#f1f5f9;">
+          Novi servisni nalog
+        </span>
+
+        <!-- Edit: dva reda sa podacima o nalogu -->
+        <div *ngIf="editingOrder" style="display:flex; flex-direction:column; gap:6px; flex:1;">
+          <!-- Red 1: ID, vozilo, status -->
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <span style="font-size:20px; font-weight:700; color:#f1f5f9;">Nalog #{{ editingOrder.id }}</span>
+            <span style="font-size:16px; font-weight:600; color:#7dd3fc;">{{ getRegistration(editingOrder.vehicleId) }}</span>
+            <span class="badge"
+              [class.badge-open]="editingOrder.status === 'Open'"
+              [class.badge-inprogress]="editingOrder.status === 'InProgress'"
+              [class.badge-closed]="editingOrder.status === 'Closed'">
+              {{ statusLabel(editingOrder.status) }}
+            </span>
+          </div>
+          <!-- Red 2: datum, km, otvoreno -->
+          <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+            <span style="font-size:13px; color:#475569;">
+              <span style="color:#64748b; margin-right:4px;">Datum:</span>
+              <span style="color:#94a3b8;">{{ editingOrder.date | date:'dd.MM.yyyy' }}</span>
+            </span>
+            <span style="font-size:13px; color:#475569;">
+              <span style="color:#64748b; margin-right:4px;">Kilometraža:</span>
+              <span style="color:#94a3b8;">{{ editingOrder.mileage | number }} km</span>
+            </span>
+            <span style="font-size:13px; color:#475569;">
+              <span style="color:#64748b; margin-right:4px;">Otvoreno:</span>
+              <span style="color:#94a3b8;">{{ editingOrder.openedAt | date:'dd.MM.yyyy' }}</span>
+            </span>
+            <span *ngIf="editingOrder.closedAt" style="font-size:13px;">
+              <span style="color:#64748b; margin-right:4px;">Zatvoreno:</span>
+              <span style="color:#94a3b8;">{{ editingOrder.closedAt | date:'dd.MM.yyyy' }}</span>
+            </span>
+          </div>
+        </div>
+
+      </ng-template>
 
       <!-- Forma -->
       <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px;">
@@ -103,15 +146,35 @@ import { ServiceActivity } from '../models/service-activity';
           <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
         </div>
 
-        <!-- Vozilo prikaz (samo za edit) -->
-        <div class="form-field" *ngIf="editingOrder">
-          <label>Vozilo</label>
-          <div style="padding:10px 12px; background:#0f172a; border:1px solid #1e293b; border-radius:8px; color:#94a3b8; font-size:14px;">
-            {{ getRegistration(editingOrder.vehicleId) }}
+        <!-- Edit: Datum | Km | Status u tri kolone -->
+        <div *ngIf="editingOrder" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+          <div class="form-field">
+            <label>Datum servisa *</label>
+            <input type="date" formControlName="date"
+              [class.error]="submitted && form.get('date')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+            <span class="field-error" *ngIf="submitted && form.get('date')?.invalid">Obavezno polje</span>
+          </div>
+          <div class="form-field">
+            <label>Kilometraža *</label>
+            <input type="number" formControlName="mileage" placeholder="npr. 45000" min="0"
+              [class.error]="submitted && form.get('mileage')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+            <span class="field-error" *ngIf="submitted && form.get('mileage')?.invalid">Unesite kilometražu</span>
+          </div>
+          <div class="form-field">
+            <label>Status</label>
+            <select formControlName="status"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+              <option value="Open">Otvoreno</option>
+              <option value="InProgress">U toku</option>
+              <option value="Closed">Zatvoreno</option>
+            </select>
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <!-- Novi nalog: Datum | Km u dve kolone -->
+        <div *ngIf="!editingOrder" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
           <div class="form-field">
             <label>Datum servisa *</label>
             <input type="date" formControlName="date"
@@ -133,17 +196,6 @@ import { ServiceActivity } from '../models/service-activity';
           <input formControlName="description" placeholder="npr. Zamena ulja i filtera"
             [class.error]="submitted && form.get('description')?.invalid" />
           <span class="field-error" *ngIf="submitted && form.get('description')?.invalid">Obavezno polje</span>
-        </div>
-
-        <!-- Status (samo za edit) -->
-        <div class="form-field" *ngIf="editingOrder">
-          <label>Status</label>
-          <select formControlName="status"
-            style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
-            <option value="Open">Otvoreno</option>
-            <option value="InProgress">U toku</option>
-            <option value="Closed">Zatvoreno</option>
-          </select>
         </div>
 
         <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:4px;">
