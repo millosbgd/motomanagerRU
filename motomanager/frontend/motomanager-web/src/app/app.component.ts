@@ -24,6 +24,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           <a routerLink="/service-orders" routerLinkActive="active">
             <i class="pi pi-wrench"></i> Servisni nalozi
           </a>
+          <a routerLink="/service-activities" routerLinkActive="active">
+            <i class="pi pi-list"></i> Aktivnosti
+          </a>
         </div>
       </nav>
       <main class="app-main">

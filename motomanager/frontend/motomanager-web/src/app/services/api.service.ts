@@ -5,6 +5,7 @@ import { CreateVehicleRequest, Vehicle, UpdateVehicleRequest } from '../models/v
 import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
+import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -116,5 +117,35 @@ export class ApiService {
 
   deleteClient(id: number) {
     return this.http.delete(`${this.baseUrl}/api/clients/${id}`);
+  }
+
+  // ─── Servisne aktivnosti ───────────────────────────────────
+
+  getServiceActivities() {
+    return this.http.get<ServiceActivity[]>(`${this.baseUrl}/api/service-activities`);
+  }
+
+  createServiceActivity(request: CreateServiceActivityRequest) {
+    return this.http.post<ServiceActivity>(`${this.baseUrl}/api/service-activities`, request);
+  }
+
+  updateServiceActivity(id: number, request: UpdateServiceActivityRequest) {
+    return this.http.put<ServiceActivity>(`${this.baseUrl}/api/service-activities/${id}`, request);
+  }
+
+  deleteServiceActivity(id: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-activities/${id}`);
+  }
+
+  getActivitiesByOrder(serviceOrderId: number) {
+    return this.http.get<ServiceActivity[]>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities`);
+  }
+
+  addActivityToOrder(serviceOrderId: number, serviceActivityId: number) {
+    return this.http.post(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}`, {});
+  }
+
+  removeActivityFromOrder(serviceOrderId: number, serviceActivityId: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}`);
   }
 }

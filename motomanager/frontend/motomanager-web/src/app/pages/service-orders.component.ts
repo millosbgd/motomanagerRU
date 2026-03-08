@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ApiService } from '../services/api.service';
 import { ServiceOrder } from '../models/service-order';
 import { Vehicle } from '../models/vehicle';
+import { ServiceActivity } from '../models/service-activity';
 
 @Component({
   standalone: true,
   selector: 'app-service-orders',
-  imports: [CommonModule, ReactiveFormsModule, DialogModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DialogModule],
   template: `
     <div class="page-header" style="display:flex; align-items:center; justify-content:space-between;">
       <div>
@@ -37,12 +38,13 @@ import { Vehicle } from '../models/vehicle';
             <th>Opis</th>
             <th>Status</th>
             <th>Otvoreno</th>
+            <th>Aktivnosti</th>
             <th>Akcija</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="orders.length === 0" class="empty-row">
-            <td colspan="6">
+            <td colspan="7">
               <i class="pi pi-wrench" style="font-size:24px; color:#334155; display:block; margin-bottom:8px;"></i>
               Nema naloga.
             </td>
@@ -60,6 +62,11 @@ import { Vehicle } from '../models/vehicle';
               </span>
             </td>
             <td style="color:#64748b; font-size:13px;">{{ o.openedAt | date:'dd.MM.yyyy' }}</td>
+            <td>
+              <button class="btn" style="padding:5px 12px; background:#1e3a5f; color:#7dd3fc; font-size:13px;" (click)="openActivitiesModal(o)">
+                <i class="pi pi-list"></i> Aktivnosti
+              </button>
+            </td>
             <td>
               <button *ngIf="o.status !== 'Closed'" class="btn btn-success" (click)="close(o)">
                 <i class="pi pi-check"></i> Zatvori
@@ -106,14 +113,67 @@ import { Vehicle } from '../models/vehicle';
         </div>
       </form>
     </p-dialog>
+
+    <!-- Modal: Aktivnosti naloga -->
+    <p-dialog
+      [header]="'Aktivnosti – nalog #' + (activeOrder?.id ?? '')"
+      [(visible)]="activitiesModalVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '520px'}"
+      styleClass="dark-dialog"
+      (onHide)="closeActivitiesModal()">
+
+      <div style="padding:4px 0 16px;">
+
+        <div *ngIf="orderActivitiesLoading" style="text-align:center; padding:16px; color:#64748b;">
+          <i class="pi pi-spin pi-spinner"></i> Učitavanje...
+        </div>
+
+        <div *ngIf="!orderActivitiesLoading">
+          <div *ngIf="orderActivities.length === 0" style="color:#475569; font-size:14px; padding:8px 0 16px;">
+            Nema aktivnosti na ovom nalogu.
+          </div>
+
+          <div *ngFor="let a of orderActivities"
+            style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#0f172a; border-radius:8px; margin-bottom:8px;">
+            <span style="color:#e2e8f0; font-size:14px;">{{ a.name }}</span>
+            <button class="btn" style="padding:4px 10px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeActivity(a.id)">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top:16px; border-top:1px solid #1e293b; padding-top:16px;">
+            <select [(ngModel)]="selectedActivityId"
+              style="flex:1; background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none;">
+              <option [ngValue]="null" disabled>Izaberi aktivnost...</option>
+              <option *ngFor="let a of availableActivities" [ngValue]="a.id">{{ a.name }}</option>
+            </select>
+            <button class="btn btn-primary" [disabled]="!selectedActivityId" (click)="addActivity()">
+              <i class="pi pi-plus"></i> Dodaj
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </p-dialog>
   `
 })
 export class ServiceOrdersComponent implements OnInit {
   orders: ServiceOrder[] = [];
   vehicles: Vehicle[] = [];
+  allActivities: ServiceActivity[] = [];
   loading = false;
   submitted = false;
   modalVisible = false;
+
+  // Activities modal
+  activitiesModalVisible = false;
+  activeOrder: ServiceOrder | null = null;
+  orderActivities: ServiceActivity[] = [];
+  orderActivitiesLoading = false;
+  selectedActivityId: number | null = null;
 
   form = this.fb.group({
     vehicleId: [null as number | null, Validators.required],
@@ -125,6 +185,7 @@ export class ServiceOrdersComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.api.getVehicles().subscribe(v => this.vehicles = v);
+    this.api.getServiceActivities().subscribe(a => this.allActivities = a.filter(x => x.isActive));
   }
 
   load() {
@@ -141,8 +202,49 @@ export class ServiceOrdersComponent implements OnInit {
     this.modalVisible = true;
   }
 
-  closeModal() {
-    this.modalVisible = false;
+  closeModal() { this.modalVisible = false; }
+
+  openActivitiesModal(order: ServiceOrder) {
+    this.activeOrder = order;
+    this.selectedActivityId = null;
+    this.orderActivities = [];
+    this.activitiesModalVisible = true;
+    this.loadOrderActivities();
+  }
+
+  closeActivitiesModal() {
+    this.activeOrder = null;
+    this.orderActivities = [];
+    this.activitiesModalVisible = false;
+  }
+
+  loadOrderActivities() {
+    if (!this.activeOrder) return;
+    this.orderActivitiesLoading = true;
+    this.api.getActivitiesByOrder(this.activeOrder.id).subscribe({
+      next: data => { this.orderActivities = data; this.orderActivitiesLoading = false; },
+      error: () => { this.orderActivitiesLoading = false; }
+    });
+  }
+
+  get availableActivities(): ServiceActivity[] {
+    const linked = new Set(this.orderActivities.map(a => a.id));
+    return this.allActivities.filter(a => !linked.has(a.id));
+  }
+
+  addActivity() {
+    if (!this.activeOrder || !this.selectedActivityId) return;
+    this.api.addActivityToOrder(this.activeOrder.id, this.selectedActivityId).subscribe(() => {
+      this.selectedActivityId = null;
+      this.loadOrderActivities();
+    });
+  }
+
+  removeActivity(activityId: number) {
+    if (!this.activeOrder) return;
+    this.api.removeActivityFromOrder(this.activeOrder.id, activityId).subscribe(() => {
+      this.loadOrderActivities();
+    });
   }
 
   onSubmit() {
