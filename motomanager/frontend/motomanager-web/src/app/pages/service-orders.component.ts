@@ -6,6 +6,7 @@ import { ApiService } from '../services/api.service';
 import { ServiceOrder } from '../models/service-order';
 import { Vehicle } from '../models/vehicle';
 import { ServiceActivity } from '../models/service-activity';
+import { Client } from '../models/client';
 
 @Component({
   standalone: true,
@@ -95,10 +96,11 @@ import { ServiceActivity } from '../models/service-activity';
 
         <!-- Edit: dva reda sa podacima o nalogu -->
         <div *ngIf="editingOrder" style="display:flex; flex-direction:column; gap:6px; flex:1;">
-          <!-- Red 1: ID, vozilo, status -->
+          <!-- Red 1: ID, vozilo, klijent, status -->
           <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
             <span style="font-size:20px; font-weight:700; color:#f1f5f9;">Nalog #{{ editingOrder.id }}</span>
             <span style="font-size:16px; font-weight:600; color:#7dd3fc;">{{ getRegistration(editingOrder.vehicleId) }}</span>
+            <span *ngIf="getClientForVehicle(editingOrder.vehicleId)" style="font-size:14px; color:#94a3b8;">{{ getClientForVehicle(editingOrder.vehicleId) }}</span>
             <span class="badge"
               [class.badge-open]="editingOrder.status === 'Open'"
               [class.badge-inprogress]="editingOrder.status === 'InProgress'"
@@ -132,18 +134,28 @@ import { ServiceActivity } from '../models/service-activity';
       <!-- Forma -->
       <form [formGroup]="form" (ngSubmit)="onSubmit()" style="display:flex; flex-direction:column; gap:16px;">
 
-        <!-- Vozilo (samo za novi nalog) -->
-        <div class="form-field" *ngIf="!editingOrder">
-          <label>Vozilo *</label>
-          <select formControlName="vehicleId"
-            [class.error]="submitted && form.get('vehicleId')?.invalid"
-            style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
-            <option [ngValue]="null" disabled>Izaberi vozilo</option>
-            <option *ngFor="let v of vehicles" [ngValue]="v.id">
-              {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
-            </option>
-          </select>
-          <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+        <!-- Klijent + Vozilo (samo za novi nalog) -->
+        <div *ngIf="!editingOrder" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-field">
+            <label>Klijent</label>
+            <select [ngModel]="selectedClientId" (ngModelChange)="onClientChange($event)" [ngModelOptions]="{standalone: true}"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+              <option [ngValue]="null">Svi klijenti</option>
+              <option *ngFor="let c of clients" [ngValue]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Vozilo *</label>
+            <select formControlName="vehicleId"
+              [class.error]="submitted && form.get('vehicleId')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+              <option [ngValue]="null" disabled>Izaberi vozilo</option>
+              <option *ngFor="let v of filteredVehicles" [ngValue]="v.id">
+                {{ v.registration }} &mdash; {{ v.make }} {{ v.model }}
+              </option>
+            </select>
+            <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+          </div>
         </div>
 
         <!-- Edit: Datum | Km | Status u tri kolone -->
@@ -257,6 +269,7 @@ import { ServiceActivity } from '../models/service-activity';
 export class ServiceOrdersComponent implements OnInit {
   orders: ServiceOrder[] = [];
   vehicles: Vehicle[] = [];
+  clients: Client[] = [];
   allActivities: ServiceActivity[] = [];
   loading = false;
   submitted = false;
@@ -264,6 +277,7 @@ export class ServiceOrdersComponent implements OnInit {
   activeFormTab = 'details';
 
   editingOrder: ServiceOrder | null = null;
+  selectedClientId: number | null = null;
 
   orderActivities: ServiceActivity[] = [];
   orderActivitiesLoading = false;
@@ -282,7 +296,26 @@ export class ServiceOrdersComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.api.getVehicles().subscribe(v => this.vehicles = v);
+    this.api.getClients().subscribe(c => this.clients = c.filter(x => x.isActive));
     this.api.getServiceActivities().subscribe(a => this.allActivities = a.filter(x => x.isActive));
+  }
+
+  get filteredVehicles(): Vehicle[] {
+    const active = this.vehicles.filter(v => v.isActive);
+    return this.selectedClientId
+      ? active.filter(v => v.clientId === this.selectedClientId)
+      : active;
+  }
+
+  onClientChange(clientId: number | null) {
+    this.selectedClientId = clientId;
+    this.form.get('vehicleId')!.setValue(null);
+  }
+
+  getClientForVehicle(vehicleId: number): string {
+    const vehicle = this.vehicles.find(v => v.id === vehicleId);
+    if (!vehicle?.clientId) return '';
+    return vehicle.clientName ?? this.clients.find(c => c.id === vehicle.clientId)?.name ?? '';
   }
 
   load() {
@@ -297,6 +330,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.editingOrder = null;
     this.submitted = false;
     this.activeFormTab = 'activities';
+    this.selectedClientId = null;
     this.form.reset({
       vehicleId: null,
       description: '',
