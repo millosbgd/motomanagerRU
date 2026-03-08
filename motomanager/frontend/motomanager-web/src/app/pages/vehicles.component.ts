@@ -50,7 +50,7 @@ import { Client } from '../models/client';
               Nema vozila. Dodaj prvo vozilo.
             </td>
           </tr>
-          <tr *ngFor="let v of vehicles">
+          <tr *ngFor="let v of vehicles" [style.opacity]="v.isActive ? '1' : '0.45'">
             <td style="color:#475569; font-size:13px;">{{ v.id }}</td>
             <td><strong style="color:#f1f5f9;">{{ v.registration }}</strong></td>
             <td>{{ v.make }}</td>

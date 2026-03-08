@@ -10,7 +10,6 @@ public class VehicleService(IVehicleRepository repository) : IVehicleService
     {
         var vehicles = await repository.GetAllAsync(ct);
         return vehicles
-            .Where(v => v.IsActive)
             .Select(MapToDto)
             .ToList();
     }
