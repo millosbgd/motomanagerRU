@@ -51,6 +51,13 @@ public class ServiceOrderService(
             return null;
         }
 
+        var vehicle = await vehicleRepository.GetByIdAsync(request.VehicleId, ct);
+        if (vehicle is null || !vehicle.IsActive)
+        {
+            throw new InvalidOperationException("Vehicle not found or inactive.");
+        }
+
+        order.VehicleId = request.VehicleId;
         order.Description = request.Description;
         order.Status = request.Status;
         order.Date = request.Date;

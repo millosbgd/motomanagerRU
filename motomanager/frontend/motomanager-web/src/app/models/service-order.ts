@@ -21,6 +21,7 @@ export interface CreateServiceOrderRequest {
 }
 
 export interface UpdateServiceOrderRequest {
+  vehicleId: number;
   description: string;
   status: ServiceOrderStatus;
   date: string;

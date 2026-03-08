@@ -17,6 +17,7 @@ public class UpdateServiceOrderRequestValidator : AbstractValidator<UpdateServic
 {
     public UpdateServiceOrderRequestValidator()
     {
+        RuleFor(x => x.VehicleId).GreaterThan(0);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
         RuleFor(x => x.Status).IsInEnum();
         RuleFor(x => x.Mileage).GreaterThanOrEqualTo(0);

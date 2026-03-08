@@ -160,6 +160,28 @@ import { Client } from '../models/client';
           </div>
         </div>
 
+        <!-- Edit: Klijent + Vozilo -->
+        <div *ngIf="editingOrder" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div class="form-field">
+            <label>Klijent</label>
+            <select [ngModel]="selectedClientId" (ngModelChange)="onClientChange($event)" [ngModelOptions]="{standalone: true}"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+              <option [ngValue]="null">Svi klijenti</option>
+              <option *ngFor="let c of clients" [ngValue]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Vozilo *</label>
+            <select formControlName="vehicleId"
+              [class.error]="submitted && form.get('vehicleId')?.invalid"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:10px 12px; font-size:14px; outline:none; width:100%;">
+              <option [ngValue]="null" disabled>Izaberi vozilo</option>
+              <option *ngFor="let v of filteredVehicles" [ngValue]="v.id">{{ v.registration }} &mdash; {{ v.make }} {{ v.model }}</option>
+            </select>
+            <span class="field-error" *ngIf="submitted && form.get('vehicleId')?.invalid">Izaberi vozilo</span>
+          </div>
+        </div>
+
         <!-- Edit: Datum | Km | Status u tri kolone -->
         <div *ngIf="editingOrder" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
           <div class="form-field">
@@ -358,7 +380,8 @@ export class ServiceOrdersComponent implements OnInit {
       mileage: order.mileage,
       status: order.status
     });
-    this.form.get('vehicleId')!.clearValidators();
+    this.selectedClientId = this.vehicles.find(v => v.id === order.vehicleId)?.clientId ?? null;
+    this.form.get('vehicleId')!.setValidators(Validators.required);
     this.form.get('vehicleId')!.updateValueAndValidity();
     this.modalVisible = true;
     this.loadOrderActivities();
@@ -405,6 +428,7 @@ export class ServiceOrdersComponent implements OnInit {
     const v = this.form.getRawValue();
     if (this.editingOrder) {
       this.api.updateServiceOrder(this.editingOrder.id, {
+        vehicleId: v.vehicleId!,
         description: v.description!,
         status: v.status as any,
         date: v.date!,
