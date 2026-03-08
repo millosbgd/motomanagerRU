@@ -7,6 +7,8 @@ public record ServiceOrderDto(
     long VehicleId,
     string Description,
     ServiceOrderStatus Status,
+    DateOnly Date,
+    int Mileage,
     DateTimeOffset OpenedAt,
     DateTimeOffset? ClosedAt,
     DateTimeOffset CreatedAt,

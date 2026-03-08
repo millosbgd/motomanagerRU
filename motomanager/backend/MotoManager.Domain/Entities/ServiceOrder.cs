@@ -8,6 +8,8 @@ public class ServiceOrder
     public long VehicleId { get; set; }
     public string Description { get; set; } = string.Empty;
     public ServiceOrderStatus Status { get; set; } = ServiceOrderStatus.Open;
+    public DateOnly Date { get; set; }
+    public int Mileage { get; set; }
     public DateTimeOffset OpenedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }

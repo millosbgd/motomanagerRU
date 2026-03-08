@@ -4,5 +4,7 @@ namespace MotoManager.Application.DTOs;
 
 public record UpdateServiceOrderRequest(
     string Description,
-    ServiceOrderStatus Status
+    ServiceOrderStatus Status,
+    DateOnly Date,
+    int Mileage
 );

@@ -9,6 +9,7 @@ public class CreateServiceOrderRequestValidator : AbstractValidator<CreateServic
     {
         RuleFor(x => x.VehicleId).GreaterThan(0);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
+        RuleFor(x => x.Mileage).GreaterThanOrEqualTo(0);
     }
 }
 
@@ -18,5 +19,6 @@ public class UpdateServiceOrderRequestValidator : AbstractValidator<UpdateServic
     {
         RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
         RuleFor(x => x.Status).IsInEnum();
+        RuleFor(x => x.Mileage).GreaterThanOrEqualTo(0);
     }
 }

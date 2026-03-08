@@ -5,6 +5,8 @@ export interface ServiceOrder {
   vehicleId: number;
   description: string;
   status: ServiceOrderStatus;
+  date: string;
+  mileage: number;
   openedAt: string;
   closedAt?: string;
   createdAt: string;
@@ -14,4 +16,13 @@ export interface ServiceOrder {
 export interface CreateServiceOrderRequest {
   vehicleId: number;
   description: string;
+  date: string;
+  mileage: number;
+}
+
+export interface UpdateServiceOrderRequest {
+  description: string;
+  status: ServiceOrderStatus;
+  date: string;
+  mileage: number;
 }

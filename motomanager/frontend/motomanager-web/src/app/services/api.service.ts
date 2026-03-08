@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { CreateVehicleRequest, Vehicle, UpdateVehicleRequest } from '../models/vehicle';
-import { CreateServiceOrderRequest, ServiceOrder } from '../models/service-order';
+import { CreateServiceOrderRequest, ServiceOrder, UpdateServiceOrderRequest } from '../models/service-order';
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
 import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
@@ -74,6 +74,12 @@ export class ApiService {
 
   createServiceOrder(request: CreateServiceOrderRequest) {
     return this.http.post<ServiceOrder>(`${this.baseUrl}/api/service-orders`, request).pipe(
+      tap(() => this.invalidateOrders())
+    );
+  }
+
+  updateServiceOrder(id: number, request: UpdateServiceOrderRequest) {
+    return this.http.put<ServiceOrder>(`${this.baseUrl}/api/service-orders/${id}`, request).pipe(
       tap(() => this.invalidateOrders())
     );
   }

@@ -33,6 +33,11 @@ $$;
 
 -- ─── SERVISNI NALOZI ─────────────────────────────────────────
 
+-- DDL: Pokrenuti ručno u DBeaver (direktna konekcija port 5432, Alt+X):
+-- ALTER TABLE public.service_orders
+--   ADD COLUMN IF NOT EXISTS date date NOT NULL DEFAULT CURRENT_DATE,
+--   ADD COLUMN IF NOT EXISTS mileage int NOT NULL DEFAULT 0;
+
 CREATE OR REPLACE FUNCTION fn_get_all_service_orders()
 RETURNS SETOF service_orders
 LANGUAGE sql STABLE AS $$

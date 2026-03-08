@@ -34,6 +34,8 @@ public class ServiceOrderService(
             VehicleId = request.VehicleId,
             Description = request.Description,
             Status = ServiceOrderStatus.Open,
+            Date = request.Date,
+            Mileage = request.Mileage,
             OpenedAt = DateTimeOffset.UtcNow
         };
 
@@ -51,6 +53,8 @@ public class ServiceOrderService(
 
         order.Description = request.Description;
         order.Status = request.Status;
+        order.Date = request.Date;
+        order.Mileage = request.Mileage;
 
         if (request.Status == ServiceOrderStatus.Closed && order.ClosedAt is null)
         {
@@ -82,6 +86,8 @@ public class ServiceOrderService(
             order.VehicleId,
             order.Description,
             order.Status,
+            order.Date,
+            order.Mileage,
             order.OpenedAt,
             order.ClosedAt,
             order.CreatedAt,
