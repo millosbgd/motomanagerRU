@@ -9,6 +9,7 @@ import { ServiceActivity } from '../models/service-activity';
 import { Client } from '../models/client';
 import { ServiceOperation } from '../models/material';
 import { ServiceOrderOperation } from '../models/service-order-operation';
+import { ServiceOrderMaterial } from '../models/service-order-material';
 
 @Component({
   standalone: true,
@@ -261,6 +262,13 @@ import { ServiceOrderOperation } from '../models/service-order-operation';
             (click)="switchToOperations()">
             Servisne operacije
           </button>
+          <button
+            style="padding:10px 20px; border:none; border-bottom:2px solid transparent; background:transparent; font-size:14px; cursor:pointer; transition:all 0.15s;"
+            [style.borderBottomColor]="activeFormTab === 'materials' ? '#3b82f6' : 'transparent'"
+            [style.color]="activeFormTab === 'materials' ? '#93c5fd' : '#64748b'"
+            (click)="switchToMaterials()">
+            Materijali
+          </button>
         </div>
 
         <!-- Tab: Aktivnosti -->
@@ -374,6 +382,87 @@ import { ServiceOrderOperation } from '../models/service-order-operation';
           </div>
         </div>
 
+        <!-- Tab: Materijali -->
+        <div *ngIf="activeFormTab === 'materials'">
+          <div *ngIf="orderMaterialsLoading" style="text-align:center; padding:16px; color:#64748b;">
+            <i class="pi pi-spin pi-spinner"></i> Učitavanje...
+          </div>
+
+          <div *ngIf="!orderMaterialsLoading">
+
+            <!-- Tabela postojećih materijala -->
+            <div *ngIf="orderMaterials.length > 0" style="margin-bottom:16px; overflow-x:auto;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #1e293b; color:#64748b; text-align:left;">
+                    <th style="padding:8px 10px;">Materijal</th>
+                    <th style="padding:8px 10px;">JM</th>
+                    <th style="padding:8px 10px; text-align:right;">Količina</th>
+                    <th style="padding:8px 10px; text-align:right;">Cena/jm</th>
+                    <th style="padding:8px 10px; text-align:right;">Ukupno</th>
+                    <th style="padding:8px 10px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let m of orderMaterials"
+                    style="border-bottom:1px solid #0f172a; background:#0f172a; border-radius:4px;">
+                    <td style="padding:8px 10px; color:#e2e8f0;">{{ m.materialName }}</td>
+                    <td style="padding:8px 10px; color:#94a3b8;">{{ m.unitOfMeasureName ?? '-' }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ m.quantity }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ m.pricePerUnit | number:'1.2-2' }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#7dd3fc; font-weight:600;">{{ m.totalPrice | number:'1.2-2' }}</td>
+                    <td style="padding:8px 10px; text-align:right;">
+                      <button class="btn" style="padding:3px 9px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeMaterial(m.id)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr style="border-top:2px solid #1e293b;">
+                    <td colspan="4" style="padding:8px 10px; color:#64748b; font-size:12px; text-align:right;">UKUPNO:</td>
+                    <td style="padding:8px 10px; text-align:right; color:#f1f5f9; font-weight:700; font-size:14px;">{{ materialsTotal | number:'1.2-2' }}</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div *ngIf="orderMaterials.length === 0" style="color:#475569; font-size:14px; padding:0 0 12px;">
+              Nema materijala na ovom nalogu.
+            </div>
+
+            <!-- Forma za dodavanje -->
+            <div style="display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:8px; align-items:end; margin-top:8px;">
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Materijal</label>
+                <select [(ngModel)]="newMat.materialId"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%;">
+                  <option [ngValue]="null" disabled>Izaberi...</option>
+                  <option *ngFor="let mat of allMaterials" [ngValue]="mat.id">{{ mat.name }}</option>
+                </select>
+              </div>
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Količina</label>
+                <input type="number" [(ngModel)]="newMat.quantity" min="0" step="0.01"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+              </div>
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Cena/jm</label>
+                <input type="number" [(ngModel)]="newMat.pricePerUnit" min="0" step="1"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+              </div>
+              <button class="btn btn-primary" style="padding:9px 16px;"
+                [disabled]="!newMat.materialId || newMat.quantity <= 0"
+                (click)="addMaterial()">
+                <i class="pi pi-plus"></i> Dodaj
+              </button>
+            </div>
+            <div *ngIf="newMat.materialId && newMat.quantity > 0 && newMat.pricePerUnit > 0"
+              style="text-align:right; font-size:13px; color:#7dd3fc; margin-top:6px;">
+              = {{ (newMat.quantity * newMat.pricePerUnit) | number:'1.2-2' }}
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </p-dialog>
   `
@@ -401,6 +490,12 @@ export class ServiceOrdersComponent implements OnInit {
   newOp: { operationId: number | null; workHours: number; pricePerHour: number } =
     { operationId: null, workHours: 0, pricePerHour: 0 };
 
+  allMaterials: any[] = [];
+  orderMaterials: ServiceOrderMaterial[] = [];
+  orderMaterialsLoading = false;
+  newMat: { materialId: number | null; quantity: number; pricePerUnit: number } =
+    { materialId: null, quantity: 0, pricePerUnit: 0 };
+
   form = this.fb.group({
     vehicleId: [null as number | null, Validators.required],
     description: ['', Validators.required],
@@ -417,6 +512,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.api.getClients().subscribe(c => this.clients = c.filter(x => x.isActive));
     this.api.getServiceActivities().subscribe(a => this.allActivities = a.filter(x => x.isActive));
     this.api.getServiceOperations().subscribe(o => this.allOperations = o.filter(x => x.isActive));
+    this.api.getMaterials().subscribe(m => this.allMaterials = m.filter((x: any) => x.isActive));
   }
 
   get filteredVehicles(): Vehicle[] {
@@ -468,8 +564,10 @@ export class ServiceOrdersComponent implements OnInit {
     this.activeFormTab = 'activities';
     this.orderActivities = [];
     this.orderOperations = [];
+    this.orderMaterials = [];
     this.selectedActivityId = null;
     this.newOp = { operationId: null, workHours: 0, pricePerHour: 0 };
+    this.newMat = { materialId: null, quantity: 0, pricePerUnit: 0 };
     this.form.reset({
       vehicleId: order.vehicleId,
       description: order.description,
@@ -489,6 +587,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.editingOrder = null;
     this.orderActivities = [];
     this.orderOperations = [];
+    this.orderMaterials = [];
   }
 
   loadOrderActivities() {
@@ -563,6 +662,47 @@ export class ServiceOrdersComponent implements OnInit {
     if (!this.editingOrder) return;
     this.api.removeOperationFromOrder(this.editingOrder.id, rowId).subscribe(() => {
       this.loadOrderOperations();
+    });
+  }
+
+  // ─── Materijali ───────────────────────────────────────────
+
+  switchToMaterials() {
+    this.activeFormTab = 'materials';
+    if (this.editingOrder && this.orderMaterials.length === 0 && !this.orderMaterialsLoading) {
+      this.loadOrderMaterials();
+    }
+  }
+
+  loadOrderMaterials() {
+    if (!this.editingOrder) return;
+    this.orderMaterialsLoading = true;
+    this.api.getMaterialsByOrder(this.editingOrder.id).subscribe({
+      next: data => { this.orderMaterials = data; this.orderMaterialsLoading = false; },
+      error: () => { this.orderMaterialsLoading = false; }
+    });
+  }
+
+  get materialsTotal(): number {
+    return this.orderMaterials.reduce((sum, m) => sum + m.totalPrice, 0);
+  }
+
+  addMaterial() {
+    if (!this.editingOrder || !this.newMat.materialId) return;
+    this.api.addMaterialToOrder(this.editingOrder.id, {
+      materialId: this.newMat.materialId,
+      quantity: this.newMat.quantity,
+      pricePerUnit: this.newMat.pricePerUnit
+    }).subscribe(() => {
+      this.newMat = { materialId: null, quantity: 0, pricePerUnit: 0 };
+      this.loadOrderMaterials();
+    });
+  }
+
+  removeMaterial(rowId: number) {
+    if (!this.editingOrder) return;
+    this.api.removeMaterialFromOrder(this.editingOrder.id, rowId).subscribe(() => {
+      this.loadOrderMaterials();
     });
   }
 

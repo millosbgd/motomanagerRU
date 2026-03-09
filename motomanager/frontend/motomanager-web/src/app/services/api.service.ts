@@ -8,6 +8,7 @@ import { Client, CreateClientRequest, UpdateClientRequest } from '../models/clie
 import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
 import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest, ServiceOperation, CreateServiceOperationRequest, UpdateServiceOperationRequest } from '../models/material';
 import { ServiceOrderOperation, AddServiceOrderOperationRequest, UpdateServiceOrderOperationRequest as UpdateSooRequest } from '../models/service-order-operation';
+import { ServiceOrderMaterial, AddServiceOrderMaterialRequest, UpdateServiceOrderMaterialRequest as UpdateSomRequest } from '../models/service-order-material';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -225,5 +226,23 @@ export class ApiService {
 
   removeOperationFromOrder(serviceOrderId: number, rowId: number) {
     return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/operations/${rowId}`);
+  }
+
+  // ─── Materijali na servisnom nalogu ──────────────────────
+
+  getMaterialsByOrder(serviceOrderId: number) {
+    return this.http.get<ServiceOrderMaterial[]>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/materials`);
+  }
+
+  addMaterialToOrder(serviceOrderId: number, request: AddServiceOrderMaterialRequest) {
+    return this.http.post<ServiceOrderMaterial>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/materials`, request);
+  }
+
+  updateOrderMaterial(serviceOrderId: number, rowId: number, request: UpdateSomRequest) {
+    return this.http.put<ServiceOrderMaterial>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/materials/${rowId}`, request);
+  }
+
+  removeMaterialFromOrder(serviceOrderId: number, rowId: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/materials/${rowId}`);
   }
 }

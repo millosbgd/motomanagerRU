@@ -183,3 +183,23 @@ LANGUAGE sql STABLE AS $$
     WHERE service_order_id = p_service_order_id
     ORDER BY id;
 $$;
+
+-- ─── MATERIJALI NA NALOGU ────────────────────────────────────
+
+-- DDL: Pokrenuti ručno u DBeaver (direktna konekcija port 5432, Alt+X):
+-- CREATE TABLE IF NOT EXISTS public.service_order_materials (
+--     id bigserial PRIMARY KEY,
+--     service_order_id bigint NOT NULL REFERENCES public.service_orders(id) ON DELETE CASCADE,
+--     material_id bigint NOT NULL REFERENCES public.materials(id) ON DELETE RESTRICT,
+--     quantity numeric(10,4) NOT NULL DEFAULT 0,
+--     price_per_unit numeric(10,2) NOT NULL DEFAULT 0,
+--     total_price numeric(10,2) NOT NULL DEFAULT 0
+-- );
+
+CREATE OR REPLACE FUNCTION fn_get_materials_by_service_order(p_service_order_id bigint)
+RETURNS SETOF service_order_materials
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_order_materials
+    WHERE service_order_id = p_service_order_id
+    ORDER BY id;
+$$;

@@ -15,6 +15,7 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<Material> Materials => Set<Material>();
     public DbSet<ServiceOperation> ServiceOperations => Set<ServiceOperation>();
     public DbSet<ServiceOrderOperation> ServiceOrderOperations => Set<ServiceOrderOperation>();
+    public DbSet<ServiceOrderMaterial> ServiceOrderMaterials => Set<ServiceOrderMaterial>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -131,6 +132,23 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.HasOne(soo => soo.ServiceOperation)
                 .WithMany()
                 .HasForeignKey(soo => soo.ServiceOperationId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ServiceOrderMaterial>(entity =>
+        {
+            entity.ToTable("service_order_materials");
+            entity.HasKey(som => som.Id);
+            entity.Property(som => som.Quantity).HasColumnType("numeric(10,4)");
+            entity.Property(som => som.PricePerUnit).HasColumnType("numeric(10,2)");
+            entity.Property(som => som.TotalPrice).HasColumnType("numeric(10,2)");
+            entity.HasOne(som => som.ServiceOrder)
+                .WithMany()
+                .HasForeignKey(som => som.ServiceOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(som => som.Material)
+                .WithMany()
+                .HasForeignKey(som => som.MaterialId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
