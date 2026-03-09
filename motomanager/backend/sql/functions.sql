@@ -163,3 +163,23 @@ LANGUAGE sql STABLE AS $$
     WHERE soa.service_order_id = p_service_order_id
     ORDER BY sa.name;
 $$;
+
+-- ─── SERVISNE OPERACIJE NA NALOGU ────────────────────────────
+
+-- DDL: Pokrenuti ručno u DBeaver (direktna konekcija port 5432, Alt+X):
+-- CREATE TABLE IF NOT EXISTS public.service_order_operations (
+--     id bigserial PRIMARY KEY,
+--     service_order_id bigint NOT NULL REFERENCES public.service_orders(id) ON DELETE CASCADE,
+--     service_operation_id bigint NOT NULL REFERENCES public.service_operations(id) ON DELETE RESTRICT,
+--     work_hours numeric(6,2) NOT NULL DEFAULT 0,
+--     price_per_hour numeric(10,2) NOT NULL DEFAULT 0,
+--     total_price numeric(10,2) NOT NULL DEFAULT 0
+-- );
+
+CREATE OR REPLACE FUNCTION fn_get_operations_by_service_order(p_service_order_id bigint)
+RETURNS SETOF service_order_operations
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_order_operations
+    WHERE service_order_id = p_service_order_id
+    ORDER BY id;
+$$;

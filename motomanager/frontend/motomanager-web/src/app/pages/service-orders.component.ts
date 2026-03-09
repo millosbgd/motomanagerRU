@@ -7,6 +7,8 @@ import { ServiceOrder } from '../models/service-order';
 import { Vehicle } from '../models/vehicle';
 import { ServiceActivity } from '../models/service-activity';
 import { Client } from '../models/client';
+import { ServiceOperation } from '../models/material';
+import { ServiceOrderOperation } from '../models/service-order-operation';
 
 @Component({
   standalone: true,
@@ -252,6 +254,13 @@ import { Client } from '../models/client';
             (click)="activeFormTab = 'activities'">
             Aktivnosti
           </button>
+          <button
+            style="padding:10px 20px; border:none; border-bottom:2px solid transparent; background:transparent; font-size:14px; cursor:pointer; transition:all 0.15s;"
+            [style.borderBottomColor]="activeFormTab === 'operations' ? '#3b82f6' : 'transparent'"
+            [style.color]="activeFormTab === 'operations' ? '#93c5fd' : '#64748b'"
+            (click)="switchToOperations()">
+            Servisne operacije
+          </button>
         </div>
 
         <!-- Tab: Aktivnosti -->
@@ -286,6 +295,85 @@ import { Client } from '../models/client';
           </div>
         </div>
 
+        <!-- Tab: Servisne operacije -->
+        <div *ngIf="activeFormTab === 'operations'">
+          <div *ngIf="orderOperationsLoading" style="text-align:center; padding:16px; color:#64748b;">
+            <i class="pi pi-spin pi-spinner"></i> Učitavanje...
+          </div>
+
+          <div *ngIf="!orderOperationsLoading">
+
+            <!-- Tabela postojećih operacija -->
+            <div *ngIf="orderOperations.length > 0" style="margin-bottom:16px; overflow-x:auto;">
+              <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                  <tr style="border-bottom:1px solid #1e293b; color:#64748b; text-align:left;">
+                    <th style="padding:8px 10px;">Operacija</th>
+                    <th style="padding:8px 10px; text-align:right;">Sati</th>
+                    <th style="padding:8px 10px; text-align:right;">Cena/h</th>
+                    <th style="padding:8px 10px; text-align:right;">Ukupno</th>
+                    <th style="padding:8px 10px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let op of orderOperations"
+                    style="border-bottom:1px solid #0f172a; background:#0f172a; border-radius:4px;">
+                    <td style="padding:8px 10px; color:#e2e8f0;">{{ op.operationName }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ op.workHours }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ op.pricePerHour | number:'1.2-2' }}</td>
+                    <td style="padding:8px 10px; text-align:right; color:#7dd3fc; font-weight:600;">{{ op.totalPrice | number:'1.2-2' }}</td>
+                    <td style="padding:8px 10px; text-align:right;">
+                      <button class="btn" style="padding:3px 9px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeOperation(op.id)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr style="border-top:2px solid #1e293b;">
+                    <td colspan="3" style="padding:8px 10px; color:#64748b; font-size:12px; text-align:right;">UKUPNO:</td>
+                    <td style="padding:8px 10px; text-align:right; color:#f1f5f9; font-weight:700; font-size:14px;">{{ operationsTotal | number:'1.2-2' }}</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div *ngIf="orderOperations.length === 0" style="color:#475569; font-size:14px; padding:0 0 12px;">
+              Nema operacija na ovom nalogu.
+            </div>
+
+            <!-- Forma za dodavanje -->
+            <div style="display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:8px; align-items:end; margin-top:8px;">
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Operacija</label>
+                <select [(ngModel)]="newOp.operationId" (ngModelChange)="onOperationSelect($event)"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%;">
+                  <option [ngValue]="null" disabled>Izaberi...</option>
+                  <option *ngFor="let op of allOperations" [ngValue]="op.id">{{ op.name }}</option>
+                </select>
+              </div>
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Sati</label>
+                <input type="number" [(ngModel)]="newOp.workHours" min="0" step="0.25"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+              </div>
+              <div class="form-field" style="margin:0;">
+                <label style="font-size:12px;">Cena/h</label>
+                <input type="number" [(ngModel)]="newOp.pricePerHour" min="0" step="100"
+                  style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+              </div>
+              <button class="btn btn-primary" style="padding:9px 16px;"
+                [disabled]="!newOp.operationId || newOp.workHours <= 0"
+                (click)="addOperation()">
+                <i class="pi pi-plus"></i> Dodaj
+              </button>
+            </div>
+            <div *ngIf="newOp.operationId && newOp.workHours > 0 && newOp.pricePerHour > 0"
+              style="text-align:right; font-size:13px; color:#7dd3fc; margin-top:6px;">
+              = {{ (newOp.workHours * newOp.pricePerHour) | number:'1.2-2' }}
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </p-dialog>
   `
@@ -295,10 +383,11 @@ export class ServiceOrdersComponent implements OnInit {
   vehicles: Vehicle[] = [];
   clients: Client[] = [];
   allActivities: ServiceActivity[] = [];
+  allOperations: ServiceOperation[] = [];
   loading = false;
   submitted = false;
   modalVisible = false;
-  activeFormTab = 'details';
+  activeFormTab = 'activities';
 
   editingOrder: ServiceOrder | null = null;
   selectedClientId: number | null = null;
@@ -306,6 +395,11 @@ export class ServiceOrdersComponent implements OnInit {
   orderActivities: ServiceActivity[] = [];
   orderActivitiesLoading = false;
   selectedActivityId: number | null = null;
+
+  orderOperations: ServiceOrderOperation[] = [];
+  orderOperationsLoading = false;
+  newOp: { operationId: number | null; workHours: number; pricePerHour: number } =
+    { operationId: null, workHours: 0, pricePerHour: 0 };
 
   form = this.fb.group({
     vehicleId: [null as number | null, Validators.required],
@@ -322,6 +416,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.api.getVehicles().subscribe(v => this.vehicles = v);
     this.api.getClients().subscribe(c => this.clients = c.filter(x => x.isActive));
     this.api.getServiceActivities().subscribe(a => this.allActivities = a.filter(x => x.isActive));
+    this.api.getServiceOperations().subscribe(o => this.allOperations = o.filter(x => x.isActive));
   }
 
   get filteredVehicles(): Vehicle[] {
@@ -372,7 +467,9 @@ export class ServiceOrdersComponent implements OnInit {
     this.submitted = false;
     this.activeFormTab = 'activities';
     this.orderActivities = [];
+    this.orderOperations = [];
     this.selectedActivityId = null;
+    this.newOp = { operationId: null, workHours: 0, pricePerHour: 0 };
     this.form.reset({
       vehicleId: order.vehicleId,
       description: order.description,
@@ -391,6 +488,7 @@ export class ServiceOrdersComponent implements OnInit {
     this.modalVisible = false;
     this.editingOrder = null;
     this.orderActivities = [];
+    this.orderOperations = [];
   }
 
   loadOrderActivities() {
@@ -419,6 +517,52 @@ export class ServiceOrdersComponent implements OnInit {
     if (!this.editingOrder) return;
     this.api.removeActivityFromOrder(this.editingOrder.id, activityId).subscribe(() => {
       this.loadOrderActivities();
+    });
+  }
+
+  // ─── Servisne operacije ───────────────────────────────────
+
+  switchToOperations() {
+    this.activeFormTab = 'operations';
+    if (this.editingOrder && this.orderOperations.length === 0 && !this.orderOperationsLoading) {
+      this.loadOrderOperations();
+    }
+  }
+
+  loadOrderOperations() {
+    if (!this.editingOrder) return;
+    this.orderOperationsLoading = true;
+    this.api.getOperationsByOrder(this.editingOrder.id).subscribe({
+      next: data => { this.orderOperations = data; this.orderOperationsLoading = false; },
+      error: () => { this.orderOperationsLoading = false; }
+    });
+  }
+
+  get operationsTotal(): number {
+    return this.orderOperations.reduce((sum, op) => sum + op.totalPrice, 0);
+  }
+
+  onOperationSelect(id: number | null) {
+    const op = this.allOperations.find(o => o.id === id);
+    if (op) { this.newOp.workHours = Number(op.workHours); }
+  }
+
+  addOperation() {
+    if (!this.editingOrder || !this.newOp.operationId) return;
+    this.api.addOperationToOrder(this.editingOrder.id, {
+      serviceOperationId: this.newOp.operationId,
+      workHours: this.newOp.workHours,
+      pricePerHour: this.newOp.pricePerHour
+    }).subscribe(() => {
+      this.newOp = { operationId: null, workHours: 0, pricePerHour: 0 };
+      this.loadOrderOperations();
+    });
+  }
+
+  removeOperation(rowId: number) {
+    if (!this.editingOrder) return;
+    this.api.removeOperationFromOrder(this.editingOrder.id, rowId).subscribe(() => {
+      this.loadOrderOperations();
     });
   }
 

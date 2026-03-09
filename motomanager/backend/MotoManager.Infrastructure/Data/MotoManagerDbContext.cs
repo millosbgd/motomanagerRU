@@ -14,6 +14,7 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<Material> Materials => Set<Material>();
     public DbSet<ServiceOperation> ServiceOperations => Set<ServiceOperation>();
+    public DbSet<ServiceOrderOperation> ServiceOrderOperations => Set<ServiceOrderOperation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -114,6 +115,23 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.HasKey(o => o.Id);
             entity.Property(o => o.Name).HasMaxLength(128).IsRequired();
             entity.Property(o => o.WorkHours).HasColumnType("numeric(6,2)");
+        });
+
+        modelBuilder.Entity<ServiceOrderOperation>(entity =>
+        {
+            entity.ToTable("service_order_operations");
+            entity.HasKey(soo => soo.Id);
+            entity.Property(soo => soo.WorkHours).HasColumnType("numeric(6,2)");
+            entity.Property(soo => soo.PricePerHour).HasColumnType("numeric(10,2)");
+            entity.Property(soo => soo.TotalPrice).HasColumnType("numeric(10,2)");
+            entity.HasOne(soo => soo.ServiceOrder)
+                .WithMany()
+                .HasForeignKey(soo => soo.ServiceOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(soo => soo.ServiceOperation)
+                .WithMany()
+                .HasForeignKey(soo => soo.ServiceOperationId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

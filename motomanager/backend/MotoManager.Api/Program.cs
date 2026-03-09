@@ -43,6 +43,8 @@ builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
 builder.Services.AddScoped<IMaterialService, MaterialService>();
 builder.Services.AddScoped<IServiceOperationRepository, ServiceOperationRepository>();
 builder.Services.AddScoped<IServiceOperationService, ServiceOperationService>();
+builder.Services.AddScoped<IServiceOrderOperationRepository, ServiceOrderOperationRepository>();
+builder.Services.AddScoped<IServiceOrderOperationService, ServiceOrderOperationService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -169,6 +171,24 @@ orderGroup.MapPost("/{id:long}/activities/{activityId:long}", async (long id, lo
 
 orderGroup.MapDelete("/{id:long}/activities/{activityId:long}", async (long id, long activityId, IServiceActivityService activityService, CancellationToken ct)
     => await activityService.RemoveFromOrderAsync(id, activityId, ct) ? Results.NoContent() : Results.NotFound());
+
+orderGroup.MapGet("/{id:long}/operations", async (long id, IServiceOrderOperationService svc, CancellationToken ct)
+    => Results.Ok(await svc.GetByServiceOrderAsync(id, ct)));
+
+orderGroup.MapPost("/{id:long}/operations", async (long id, AddServiceOrderOperationRequest request, IServiceOrderOperationService svc, CancellationToken ct) =>
+{
+    var created = await svc.AddAsync(id, request, ct);
+    return Results.Created($"/api/service-orders/{id}/operations/{created.Id}", created);
+});
+
+orderGroup.MapPut("/{id:long}/operations/{rowId:long}", async (long id, long rowId, UpdateServiceOrderOperationRequest request, IServiceOrderOperationService svc, CancellationToken ct) =>
+{
+    var updated = await svc.UpdateAsync(rowId, request, ct);
+    return updated is null ? Results.NotFound() : Results.Ok(updated);
+});
+
+orderGroup.MapDelete("/{id:long}/operations/{rowId:long}", async (long id, long rowId, IServiceOrderOperationService svc, CancellationToken ct)
+    => await svc.RemoveAsync(rowId, ct) ? Results.NoContent() : Results.NotFound());
 
 var activityGroup = app.MapGroup("/api/service-activities");
 

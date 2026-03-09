@@ -7,6 +7,7 @@ import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest }
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
 import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
 import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest, ServiceOperation, CreateServiceOperationRequest, UpdateServiceOperationRequest } from '../models/material';
+import { ServiceOrderOperation, AddServiceOrderOperationRequest, UpdateServiceOrderOperationRequest as UpdateSooRequest } from '../models/service-order-operation';
 import { BehaviorSubject, Observable, retry, tap, timer } from 'rxjs';
 
 const RETRY_CONFIG = {
@@ -206,5 +207,23 @@ export class ApiService {
 
   deleteServiceOperation(id: number) {
     return this.http.delete(`${this.baseUrl}/api/service-operations/${id}`);
+  }
+
+  // ─── Operacije na servisnom nalogu ────────────────────────
+
+  getOperationsByOrder(serviceOrderId: number) {
+    return this.http.get<ServiceOrderOperation[]>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/operations`);
+  }
+
+  addOperationToOrder(serviceOrderId: number, request: AddServiceOrderOperationRequest) {
+    return this.http.post<ServiceOrderOperation>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/operations`, request);
+  }
+
+  updateOrderOperation(serviceOrderId: number, rowId: number, request: UpdateSooRequest) {
+    return this.http.put<ServiceOrderOperation>(`${this.baseUrl}/api/service-orders/${serviceOrderId}/operations/${rowId}`, request);
+  }
+
+  removeOperationFromOrder(serviceOrderId: number, rowId: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/operations/${rowId}`);
   }
 }
