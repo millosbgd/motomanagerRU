@@ -339,7 +339,10 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
                     <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ op.workHours }}</td>
                     <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ op.pricePerHour | number:'1.2-2' }}</td>
                     <td style="padding:8px 10px; text-align:right; color:#7dd3fc; font-weight:600;">{{ op.totalPrice | number:'1.2-2' }}</td>
-                    <td style="padding:8px 10px; text-align:right;">
+                    <td style="padding:8px 10px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+                      <button class="btn" style="padding:3px 9px; background:#1e3a5f; color:#7dd3fc; font-size:12px;" (click)="openEditOperation(op)">
+                        <i class="pi pi-pencil"></i>
+                      </button>
                       <button class="btn" style="padding:3px 9px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeOperation(op.id)">
                         <i class="pi pi-times"></i>
                       </button>
@@ -420,7 +423,10 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
                     <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ m.quantity }}</td>
                     <td style="padding:8px 10px; text-align:right; color:#94a3b8;">{{ m.pricePerUnit | number:'1.2-2' }}</td>
                     <td style="padding:8px 10px; text-align:right; color:#7dd3fc; font-weight:600;">{{ m.totalPrice | number:'1.2-2' }}</td>
-                    <td style="padding:8px 10px; text-align:right;">
+                    <td style="padding:8px 10px; text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+                      <button class="btn" style="padding:3px 9px; background:#1e3a5f; color:#7dd3fc; font-size:12px;" (click)="openEditMaterial(m)">
+                        <i class="pi pi-pencil"></i>
+                      </button>
                       <button class="btn" style="padding:3px 9px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeMaterial(m.id)">
                         <i class="pi pi-times"></i>
                       </button>
@@ -474,6 +480,84 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
 
       </div>
     </p-dialog>
+
+    <!-- Modal: Uredi servisnu operaciju -->
+    <p-dialog
+      [(visible)]="editOperationVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '420px', maxWidth: '96vw'}"
+      styleClass="dark-dialog"
+      (onHide)="closeEditOperation()">
+      <ng-template pTemplate="header">
+        <span style="font-size:16px; font-weight:600; color:#f1f5f9;">Uredi operaciju</span>
+      </ng-template>
+
+      <div *ngIf="editingOperationRow" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="color:#94a3b8; font-size:13px;">{{ editingOperationRow.operationName }}</div>
+        <form [formGroup]="editOperationForm" (ngSubmit)="saveEditOperation()" style="display:flex; flex-direction:column; gap:12px;">
+          <div class="form-field" style="margin:0;">
+            <label>Sati</label>
+            <input type="number" formControlName="workHours" min="0" step="0.25"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+          </div>
+          <div class="form-field" style="margin:0;">
+            <label>Cena/h</label>
+            <input type="number" formControlName="pricePerHour" min="0" step="100"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+          </div>
+          <div *ngIf="editOperationForm.valid" style="text-align:right; font-size:13px; color:#7dd3fc;">
+            = {{ (editOperationForm.value.workHours || 0) * (editOperationForm.value.pricePerHour || 0) | number:'1.2-2' }}
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+            <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeEditOperation()">Otkaži</button>
+            <button type="submit" class="btn btn-primary" [disabled]="editOperationForm.invalid">
+              <i class="pi pi-check"></i> Sačuvaj
+            </button>
+          </div>
+        </form>
+      </div>
+    </p-dialog>
+
+    <!-- Modal: Uredi materijal -->
+    <p-dialog
+      [(visible)]="editMaterialVisible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{width: '420px', maxWidth: '96vw'}"
+      styleClass="dark-dialog"
+      (onHide)="closeEditMaterial()">
+      <ng-template pTemplate="header">
+        <span style="font-size:16px; font-weight:600; color:#f1f5f9;">Uredi materijal</span>
+      </ng-template>
+
+      <div *ngIf="editingMaterialRow" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="color:#94a3b8; font-size:13px;">{{ editingMaterialRow.materialName }}</div>
+        <form [formGroup]="editMaterialForm" (ngSubmit)="saveEditMaterial()" style="display:flex; flex-direction:column; gap:12px;">
+          <div class="form-field" style="margin:0;">
+            <label>Količina</label>
+            <input type="number" formControlName="quantity" min="0" step="0.01"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+          </div>
+          <div class="form-field" style="margin:0;">
+            <label>Cena/jm</label>
+            <input type="number" formControlName="pricePerUnit" min="0" step="1"
+              style="background:#0f172a; border:1px solid #334155; border-radius:8px; color:#e2e8f0; padding:9px 12px; font-size:14px; outline:none; width:100%; box-sizing:border-box;" />
+          </div>
+          <div *ngIf="editMaterialForm.valid" style="text-align:right; font-size:13px; color:#7dd3fc;">
+            = {{ (editMaterialForm.value.quantity || 0) * (editMaterialForm.value.pricePerUnit || 0) | number:'1.2-2' }}
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:4px;">
+            <button type="button" class="btn" style="background:#334155; color:#94a3b8;" (click)="closeEditMaterial()">Otkaži</button>
+            <button type="submit" class="btn btn-primary" [disabled]="editMaterialForm.invalid">
+              <i class="pi pi-check"></i> Sačuvaj
+            </button>
+          </div>
+        </form>
+      </div>
+    </p-dialog>
   `
 })
 export class ServiceOrdersComponent implements OnInit {
@@ -500,12 +584,16 @@ export class ServiceOrdersComponent implements OnInit {
   orderOperationsLoading = false;
   newOp: { operationId: number | null; workHours: number; pricePerHour: number } =
     { operationId: null, workHours: 0, pricePerHour: 0 };
+  editOperationVisible = false;
+  editingOperationRow: ServiceOrderOperation | null = null;
 
   allMaterials: any[] = [];
   orderMaterials: ServiceOrderMaterial[] = [];
   orderMaterialsLoading = false;
   newMat: { materialId: number | null; quantity: number; pricePerUnit: number } =
     { materialId: null, quantity: 0, pricePerUnit: 0 };
+  editMaterialVisible = false;
+  editingMaterialRow: ServiceOrderMaterial | null = null;
 
   form = this.fb.group({
     vehicleId: [null as number | null, Validators.required],
@@ -513,6 +601,16 @@ export class ServiceOrdersComponent implements OnInit {
     date: [this.todayStr(), Validators.required],
     mileage: [0, [Validators.required, Validators.min(0)]],
     status: ['Open']
+  });
+
+  editOperationForm = this.fb.group({
+    workHours: [0, [Validators.required, Validators.min(0.01)]],
+    pricePerHour: [0, [Validators.required, Validators.min(0)]]
+  });
+
+  editMaterialForm = this.fb.group({
+    quantity: [0, [Validators.required, Validators.min(0.01)]],
+    pricePerUnit: [0, [Validators.required, Validators.min(0)]]
   });
 
   constructor(private api: ApiService, private fb: FormBuilder) {}
@@ -601,6 +699,10 @@ export class ServiceOrdersComponent implements OnInit {
     this.orderActivities = [];
     this.orderOperations = [];
     this.orderMaterials = [];
+    this.editOperationVisible = false;
+    this.editingOperationRow = null;
+    this.editMaterialVisible = false;
+    this.editingMaterialRow = null;
     this.applyingDefaultsId = null;
     this.applyDefaultsMessage = '';
   }
@@ -697,6 +799,32 @@ export class ServiceOrdersComponent implements OnInit {
     });
   }
 
+  openEditOperation(op: ServiceOrderOperation) {
+    this.editingOperationRow = op;
+    this.editOperationForm.reset({
+      workHours: op.workHours,
+      pricePerHour: op.pricePerHour
+    });
+    this.editOperationVisible = true;
+  }
+
+  closeEditOperation() {
+    this.editOperationVisible = false;
+    this.editingOperationRow = null;
+  }
+
+  saveEditOperation() {
+    if (!this.editingOrder || !this.editingOperationRow || this.editOperationForm.invalid) return;
+    const v = this.editOperationForm.getRawValue();
+    this.api.updateOrderOperation(this.editingOrder.id, this.editingOperationRow.id, {
+      workHours: v.workHours!,
+      pricePerHour: v.pricePerHour!
+    }).subscribe(() => {
+      this.closeEditOperation();
+      this.loadOrderOperations();
+    });
+  }
+
   // ─── Materijali ───────────────────────────────────────────
 
   switchToMaterials() {
@@ -734,6 +862,32 @@ export class ServiceOrdersComponent implements OnInit {
   removeMaterial(rowId: number) {
     if (!this.editingOrder) return;
     this.api.removeMaterialFromOrder(this.editingOrder.id, rowId).subscribe(() => {
+      this.loadOrderMaterials();
+    });
+  }
+
+  openEditMaterial(m: ServiceOrderMaterial) {
+    this.editingMaterialRow = m;
+    this.editMaterialForm.reset({
+      quantity: m.quantity,
+      pricePerUnit: m.pricePerUnit
+    });
+    this.editMaterialVisible = true;
+  }
+
+  closeEditMaterial() {
+    this.editMaterialVisible = false;
+    this.editingMaterialRow = null;
+  }
+
+  saveEditMaterial() {
+    if (!this.editingOrder || !this.editingMaterialRow || this.editMaterialForm.invalid) return;
+    const v = this.editMaterialForm.getRawValue();
+    this.api.updateOrderMaterial(this.editingOrder.id, this.editingMaterialRow.id, {
+      quantity: v.quantity!,
+      pricePerUnit: v.pricePerUnit!
+    }).subscribe(() => {
+      this.closeEditMaterial();
       this.loadOrderMaterials();
     });
   }
