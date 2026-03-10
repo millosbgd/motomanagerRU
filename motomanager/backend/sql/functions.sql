@@ -141,6 +141,22 @@ $$;
 --     service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE RESTRICT,
 --     UNIQUE(service_order_id, service_activity_id)
 -- );
+--
+-- CREATE TABLE IF NOT EXISTS public.service_activity_default_operations (
+--     id bigserial PRIMARY KEY,
+--     service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE CASCADE,
+--     service_operation_id bigint NOT NULL REFERENCES public.service_operations(id) ON DELETE RESTRICT,
+--     work_hours numeric(6,2) NOT NULL DEFAULT 0,
+--     UNIQUE(service_activity_id, service_operation_id)
+-- );
+--
+-- CREATE TABLE IF NOT EXISTS public.service_activity_default_materials (
+--     id bigserial PRIMARY KEY,
+--     service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE CASCADE,
+--     material_id bigint NOT NULL REFERENCES public.materials(id) ON DELETE RESTRICT,
+--     quantity numeric(10,4) NOT NULL DEFAULT 0,
+--     UNIQUE(service_activity_id, material_id)
+-- );
 
 CREATE OR REPLACE FUNCTION fn_get_all_service_activities()
 RETURNS SETOF service_activities
@@ -162,6 +178,24 @@ LANGUAGE sql STABLE AS $$
     INNER JOIN service_order_activities soa ON soa.service_activity_id = sa.id
     WHERE soa.service_order_id = p_service_order_id
     ORDER BY sa.name;
+$$;
+
+-- ─── DEFAULT OPERACIJE/MATERIJALI PO AKTIVNOSTI ──────────────
+
+CREATE OR REPLACE FUNCTION fn_get_default_operations_by_activity(p_service_activity_id bigint)
+RETURNS SETOF service_activity_default_operations
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_activity_default_operations
+    WHERE service_activity_id = p_service_activity_id
+    ORDER BY id;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_get_default_materials_by_activity(p_service_activity_id bigint)
+RETURNS SETOF service_activity_default_materials
+LANGUAGE sql STABLE AS $$
+    SELECT * FROM service_activity_default_materials
+    WHERE service_activity_id = p_service_activity_id
+    ORDER BY id;
 $$;
 
 -- ─── SERVISNE OPERACIJE NA NALOGU ────────────────────────────

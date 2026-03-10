@@ -19,6 +19,10 @@ public class ServiceOrderOperationRepository(MotoManagerDbContext dbContext) : I
             .Include(o => o.ServiceOperation)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
 
+    public Task<bool> ExistsAsync(long serviceOrderId, long serviceOperationId, CancellationToken ct)
+        => dbContext.ServiceOrderOperations
+            .AnyAsync(o => o.ServiceOrderId == serviceOrderId && o.ServiceOperationId == serviceOperationId, ct);
+
     public async Task AddAsync(ServiceOrderOperation operation, CancellationToken ct)
     {
         dbContext.ServiceOrderOperations.Add(operation);

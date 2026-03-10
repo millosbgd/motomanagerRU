@@ -37,6 +37,10 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IServiceActivityRepository, ServiceActivityRepository>();
 builder.Services.AddScoped<IServiceActivityService, ServiceActivityService>();
+builder.Services.AddScoped<IServiceActivityDefaultOperationRepository, ServiceActivityDefaultOperationRepository>();
+builder.Services.AddScoped<IServiceActivityDefaultOperationService, ServiceActivityDefaultOperationService>();
+builder.Services.AddScoped<IServiceActivityDefaultMaterialRepository, ServiceActivityDefaultMaterialRepository>();
+builder.Services.AddScoped<IServiceActivityDefaultMaterialService, ServiceActivityDefaultMaterialService>();
 builder.Services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
 builder.Services.AddScoped<IUnitOfMeasureService, UnitOfMeasureService>();
 builder.Services.AddScoped<IMaterialRepository, MaterialRepository>();
@@ -47,6 +51,7 @@ builder.Services.AddScoped<IServiceOrderOperationRepository, ServiceOrderOperati
 builder.Services.AddScoped<IServiceOrderOperationService, ServiceOrderOperationService>();
 builder.Services.AddScoped<IServiceOrderMaterialRepository, ServiceOrderMaterialRepository>();
 builder.Services.AddScoped<IServiceOrderMaterialService, ServiceOrderMaterialService>();
+builder.Services.AddScoped<IServiceActivityDefaultsApplyService, ServiceActivityDefaultsApplyService>();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateVehicleRequestValidator>();
 
@@ -171,6 +176,9 @@ orderGroup.MapGet("/{id:long}/activities", async (long id, IServiceActivityServi
 orderGroup.MapPost("/{id:long}/activities/{activityId:long}", async (long id, long activityId, IServiceActivityService activityService, CancellationToken ct)
     => await activityService.AddToOrderAsync(id, activityId, ct) ? Results.NoContent() : Results.Conflict());
 
+orderGroup.MapPost("/{id:long}/activities/{activityId:long}/apply-defaults", async (long id, long activityId, IServiceActivityDefaultsApplyService service, CancellationToken ct)
+    => Results.Ok(await service.ApplyToOrderAsync(id, activityId, ct)));
+
 orderGroup.MapDelete("/{id:long}/activities/{activityId:long}", async (long id, long activityId, IServiceActivityService activityService, CancellationToken ct)
     => await activityService.RemoveFromOrderAsync(id, activityId, ct) ? Results.NoContent() : Results.NotFound());
 
@@ -232,6 +240,30 @@ activityGroup.MapPut("/{id:long}", async (long id, UpdateServiceActivityRequest 
 
 activityGroup.MapDelete("/{id:long}", async (long id, IServiceActivityService service, CancellationToken ct)
     => await service.DeleteAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
+activityGroup.MapGet("/{id:long}/default-operations", async (long id, IServiceActivityDefaultOperationService svc, CancellationToken ct)
+    => Results.Ok(await svc.GetByActivityAsync(id, ct)));
+
+activityGroup.MapPost("/{id:long}/default-operations", async (long id, AddServiceActivityDefaultOperationRequest request, IServiceActivityDefaultOperationService svc, CancellationToken ct)
+    => await svc.AddToActivityAsync(id, request, ct) ? Results.NoContent() : Results.Conflict());
+
+activityGroup.MapPut("/default-operations/{rowId:long}", async (long rowId, UpdateServiceActivityDefaultOperationRequest request, IServiceActivityDefaultOperationService svc, CancellationToken ct)
+    => await svc.UpdateAsync(rowId, request, ct) is { } updated ? Results.Ok(updated) : Results.NotFound());
+
+activityGroup.MapDelete("/default-operations/{rowId:long}", async (long rowId, IServiceActivityDefaultOperationService svc, CancellationToken ct)
+    => await svc.RemoveAsync(rowId, ct) ? Results.NoContent() : Results.NotFound());
+
+activityGroup.MapGet("/{id:long}/default-materials", async (long id, IServiceActivityDefaultMaterialService svc, CancellationToken ct)
+    => Results.Ok(await svc.GetByActivityAsync(id, ct)));
+
+activityGroup.MapPost("/{id:long}/default-materials", async (long id, AddServiceActivityDefaultMaterialRequest request, IServiceActivityDefaultMaterialService svc, CancellationToken ct)
+    => await svc.AddToActivityAsync(id, request, ct) ? Results.NoContent() : Results.Conflict());
+
+activityGroup.MapPut("/default-materials/{rowId:long}", async (long rowId, UpdateServiceActivityDefaultMaterialRequest request, IServiceActivityDefaultMaterialService svc, CancellationToken ct)
+    => await svc.UpdateAsync(rowId, request, ct) is { } updated ? Results.Ok(updated) : Results.NotFound());
+
+activityGroup.MapDelete("/default-materials/{rowId:long}", async (long rowId, IServiceActivityDefaultMaterialService svc, CancellationToken ct)
+    => await svc.RemoveAsync(rowId, ct) ? Results.NoContent() : Results.NotFound());
 
 var unitOfMeasureGroup = app.MapGroup("/api/units-of-measure");
 
@@ -441,11 +473,36 @@ using (var scope = app.Services.CreateScope())
             updated_at timestamptz NOT NULL DEFAULT now()
         );
 
+        CREATE TABLE IF NOT EXISTS public.service_operations (
+            id bigserial PRIMARY KEY,
+            name varchar(128) NOT NULL,
+            work_hours numeric(6,2) NOT NULL DEFAULT 0,
+            is_active boolean NOT NULL DEFAULT true,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+        );
+
         CREATE TABLE IF NOT EXISTS public.service_order_activities (
             id bigserial PRIMARY KEY,
             service_order_id bigint NOT NULL REFERENCES public.service_orders(id) ON DELETE CASCADE,
             service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE RESTRICT,
             UNIQUE(service_order_id, service_activity_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS public.service_activity_default_operations (
+            id bigserial PRIMARY KEY,
+            service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE CASCADE,
+            service_operation_id bigint NOT NULL REFERENCES public.service_operations(id) ON DELETE RESTRICT,
+            work_hours numeric(6,2) NOT NULL DEFAULT 0,
+            UNIQUE(service_activity_id, service_operation_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS public.service_activity_default_materials (
+            id bigserial PRIMARY KEY,
+            service_activity_id bigint NOT NULL REFERENCES public.service_activities(id) ON DELETE CASCADE,
+            material_id bigint NOT NULL REFERENCES public.materials(id) ON DELETE RESTRICT,
+            quantity numeric(10,4) NOT NULL DEFAULT 0,
+            UNIQUE(service_activity_id, material_id)
         );
     ");
 

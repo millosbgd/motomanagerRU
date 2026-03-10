@@ -11,6 +11,8 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<ServiceActivity> ServiceActivities => Set<ServiceActivity>();
     public DbSet<ServiceOrderActivity> ServiceOrderActivities => Set<ServiceOrderActivity>();
+    public DbSet<ServiceActivityDefaultOperation> ServiceActivityDefaultOperations => Set<ServiceActivityDefaultOperation>();
+    public DbSet<ServiceActivityDefaultMaterial> ServiceActivityDefaultMaterials => Set<ServiceActivityDefaultMaterial>();
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<Material> Materials => Set<Material>();
     public DbSet<ServiceOperation> ServiceOperations => Set<ServiceOperation>();
@@ -87,6 +89,38 @@ public class MotoManagerDbContext(DbContextOptions<MotoManagerDbContext> options
             entity.HasOne(soa => soa.ServiceActivity)
                 .WithMany()
                 .HasForeignKey(soa => soa.ServiceActivityId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ServiceActivityDefaultOperation>(entity =>
+        {
+            entity.ToTable("service_activity_default_operations");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.ServiceActivityId, x.ServiceOperationId }).IsUnique();
+            entity.Property(x => x.WorkHours).HasColumnType("numeric(6,2)");
+            entity.HasOne(x => x.ServiceActivity)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ServiceOperation)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceOperationId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ServiceActivityDefaultMaterial>(entity =>
+        {
+            entity.ToTable("service_activity_default_materials");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.ServiceActivityId, x.MaterialId }).IsUnique();
+            entity.Property(x => x.Quantity).HasColumnType("numeric(10,4)");
+            entity.HasOne(x => x.ServiceActivity)
+                .WithMany()
+                .HasForeignKey(x => x.ServiceActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Material)
+                .WithMany()
+                .HasForeignKey(x => x.MaterialId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

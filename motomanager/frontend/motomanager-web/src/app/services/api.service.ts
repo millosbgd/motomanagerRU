@@ -2,10 +2,20 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { CreateVehicleRequest, Vehicle, UpdateVehicleRequest } from '../models/vehicle';
-import { CreateServiceOrderRequest, ServiceOrder, UpdateServiceOrderRequest } from '../models/service-order';
+import { ApplyActivityDefaultsResult, CreateServiceOrderRequest, ServiceOrder, UpdateServiceOrderRequest } from '../models/service-order';
 import { CodebookEntry, CreateCodebookEntryRequest, UpdateCodebookEntryRequest } from '../models/codebook-entry';
 import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client';
-import { ServiceActivity, CreateServiceActivityRequest, UpdateServiceActivityRequest } from '../models/service-activity';
+import {
+  ServiceActivity,
+  CreateServiceActivityRequest,
+  UpdateServiceActivityRequest,
+  ServiceActivityDefaultOperation,
+  AddServiceActivityDefaultOperationRequest,
+  UpdateServiceActivityDefaultOperationRequest,
+  ServiceActivityDefaultMaterial,
+  AddServiceActivityDefaultMaterialRequest,
+  UpdateServiceActivityDefaultMaterialRequest
+} from '../models/service-activity';
 import { Material, CreateMaterialRequest, UpdateMaterialRequest, UnitOfMeasure, CreateUnitOfMeasureRequest, UpdateUnitOfMeasureRequest, ServiceOperation, CreateServiceOperationRequest, UpdateServiceOperationRequest } from '../models/material';
 import { ServiceOrderOperation, AddServiceOrderOperationRequest, UpdateServiceOrderOperationRequest as UpdateSooRequest } from '../models/service-order-operation';
 import { ServiceOrderMaterial, AddServiceOrderMaterialRequest, UpdateServiceOrderMaterialRequest as UpdateSomRequest } from '../models/service-order-material';
@@ -154,8 +164,63 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}`, {});
   }
 
+  applyActivityDefaultsToOrder(serviceOrderId: number, serviceActivityId: number) {
+    return this.http.post<ApplyActivityDefaultsResult>(
+      `${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}/apply-defaults`,
+      {}
+    );
+  }
+
   removeActivityFromOrder(serviceOrderId: number, serviceActivityId: number) {
     return this.http.delete(`${this.baseUrl}/api/service-orders/${serviceOrderId}/activities/${serviceActivityId}`);
+  }
+
+  getActivityDefaultOperations(serviceActivityId: number) {
+    return this.http.get<ServiceActivityDefaultOperation[]>(
+      `${this.baseUrl}/api/service-activities/${serviceActivityId}/default-operations`
+    );
+  }
+
+  addActivityDefaultOperation(serviceActivityId: number, request: AddServiceActivityDefaultOperationRequest) {
+    return this.http.post(
+      `${this.baseUrl}/api/service-activities/${serviceActivityId}/default-operations`,
+      request
+    );
+  }
+
+  updateActivityDefaultOperation(rowId: number, request: UpdateServiceActivityDefaultOperationRequest) {
+    return this.http.put<ServiceActivityDefaultOperation>(
+      `${this.baseUrl}/api/service-activities/default-operations/${rowId}`,
+      request
+    );
+  }
+
+  removeActivityDefaultOperation(rowId: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-activities/default-operations/${rowId}`);
+  }
+
+  getActivityDefaultMaterials(serviceActivityId: number) {
+    return this.http.get<ServiceActivityDefaultMaterial[]>(
+      `${this.baseUrl}/api/service-activities/${serviceActivityId}/default-materials`
+    );
+  }
+
+  addActivityDefaultMaterial(serviceActivityId: number, request: AddServiceActivityDefaultMaterialRequest) {
+    return this.http.post(
+      `${this.baseUrl}/api/service-activities/${serviceActivityId}/default-materials`,
+      request
+    );
+  }
+
+  updateActivityDefaultMaterial(rowId: number, request: UpdateServiceActivityDefaultMaterialRequest) {
+    return this.http.put<ServiceActivityDefaultMaterial>(
+      `${this.baseUrl}/api/service-activities/default-materials/${rowId}`,
+      request
+    );
+  }
+
+  removeActivityDefaultMaterial(rowId: number) {
+    return this.http.delete(`${this.baseUrl}/api/service-activities/default-materials/${rowId}`);
   }
 
   // ─── Jedinice mere ────────────────────────────────────────

@@ -21,6 +21,10 @@ public class ServiceOrderMaterialRepository(MotoManagerDbContext dbContext) : IS
                 .ThenInclude(m => m!.UnitOfMeasure)
             .FirstOrDefaultAsync(m => m.Id == id, ct);
 
+    public Task<bool> ExistsAsync(long serviceOrderId, long materialId, CancellationToken ct)
+        => dbContext.ServiceOrderMaterials
+            .AnyAsync(m => m.ServiceOrderId == serviceOrderId && m.MaterialId == materialId, ct);
+
     public async Task AddAsync(ServiceOrderMaterial material, CancellationToken ct)
     {
         dbContext.ServiceOrderMaterials.Add(material);

@@ -20,6 +20,11 @@ export interface CreateServiceOrderRequest {
   mileage: number;
 }
 
+export interface ApplyActivityDefaultsResult {
+  operationsAdded: number;
+  materialsAdded: number;
+}
+
 export interface UpdateServiceOrderRequest {
   vehicleId: number;
   description: string;

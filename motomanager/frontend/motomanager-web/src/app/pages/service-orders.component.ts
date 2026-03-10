@@ -278,6 +278,9 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
           </div>
 
           <div *ngIf="!orderActivitiesLoading">
+            <div *ngIf="applyDefaultsMessage" style="margin:0 0 12px; color:#7dd3fc; font-size:13px;">
+              {{ applyDefaultsMessage }}
+            </div>
             <div *ngIf="orderActivities.length === 0" style="color:#475569; font-size:14px; padding:0 0 12px;">
               Nema aktivnosti na ovom nalogu.
             </div>
@@ -285,9 +288,15 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
             <div *ngFor="let a of orderActivities"
               style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:#0f172a; border-radius:8px; margin-bottom:6px;">
               <span style="color:#e2e8f0; font-size:14px;">{{ a.name }}</span>
-              <button class="btn" style="padding:4px 10px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeActivity(a.id)">
-                <i class="pi pi-times"></i>
-              </button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn" style="padding:4px 10px; background:#1e3a5f; color:#7dd3fc; font-size:12px;"
+                  [disabled]="applyingDefaultsId === a.id" (click)="applyDefaults(a.id)">
+                  <i class="pi pi-magic"></i> Default
+                </button>
+                <button class="btn" style="padding:4px 10px; background:#3b0f0f; color:#f87171; font-size:12px;" (click)="removeActivity(a.id)">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
             </div>
 
             <div style="display:flex; gap:8px; margin-top:12px;">
@@ -484,6 +493,8 @@ export class ServiceOrdersComponent implements OnInit {
   orderActivities: ServiceActivity[] = [];
   orderActivitiesLoading = false;
   selectedActivityId: number | null = null;
+  applyingDefaultsId: number | null = null;
+  applyDefaultsMessage = '';
 
   orderOperations: ServiceOrderOperation[] = [];
   orderOperationsLoading = false;
@@ -566,6 +577,8 @@ export class ServiceOrdersComponent implements OnInit {
     this.orderOperations = [];
     this.orderMaterials = [];
     this.selectedActivityId = null;
+    this.applyingDefaultsId = null;
+    this.applyDefaultsMessage = '';
     this.newOp = { operationId: null, workHours: 0, pricePerHour: 0 };
     this.newMat = { materialId: null, quantity: 0, pricePerUnit: 0 };
     this.form.reset({
@@ -588,6 +601,8 @@ export class ServiceOrdersComponent implements OnInit {
     this.orderActivities = [];
     this.orderOperations = [];
     this.orderMaterials = [];
+    this.applyingDefaultsId = null;
+    this.applyDefaultsMessage = '';
   }
 
   loadOrderActivities() {
@@ -616,6 +631,23 @@ export class ServiceOrdersComponent implements OnInit {
     if (!this.editingOrder) return;
     this.api.removeActivityFromOrder(this.editingOrder.id, activityId).subscribe(() => {
       this.loadOrderActivities();
+    });
+  }
+
+  applyDefaults(activityId: number) {
+    if (!this.editingOrder) return;
+    this.applyingDefaultsId = activityId;
+    this.api.applyActivityDefaultsToOrder(this.editingOrder.id, activityId).subscribe({
+      next: result => {
+        this.applyDefaultsMessage = `Dodato operacija: ${result.operationsAdded}, materijala: ${result.materialsAdded}.`;
+        this.applyingDefaultsId = null;
+        this.loadOrderOperations();
+        this.loadOrderMaterials();
+        setTimeout(() => {
+          this.applyDefaultsMessage = '';
+        }, 3000);
+      },
+      error: () => { this.applyingDefaultsId = null; }
     });
   }
 
