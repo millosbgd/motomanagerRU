@@ -10,6 +10,7 @@ import { Client } from '../models/client';
 import { ServiceOperation } from '../models/material';
 import { ServiceOrderOperation } from '../models/service-order-operation';
 import { ServiceOrderMaterial } from '../models/service-order-material';
+import { forkJoin } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -99,38 +100,54 @@ import { ServiceOrderMaterial } from '../models/service-order-material';
           Novi servisni nalog
         </span>
 
-        <!-- Edit: dva reda sa podacima o nalogu -->
-        <div *ngIf="editingOrder" style="display:flex; flex-direction:column; gap:6px; flex:1;">
-          <!-- Red 1: ID, vozilo, klijent, status -->
-          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-            <span style="font-size:20px; font-weight:700; color:#f1f5f9;">Nalog #{{ editingOrder.id }}</span>
-            <span style="font-size:16px; font-weight:600; color:#7dd3fc;">{{ getRegistration(editingOrder.vehicleId) }}</span>
-            <span *ngIf="getClientForVehicle(editingOrder.vehicleId)" style="font-size:14px; color:#94a3b8;">{{ getClientForVehicle(editingOrder.vehicleId) }}</span>
-            <span class="badge"
-              [class.badge-open]="editingOrder.status === 'Open'"
-              [class.badge-inprogress]="editingOrder.status === 'InProgress'"
-              [class.badge-closed]="editingOrder.status === 'Closed'">
-              {{ statusLabel(editingOrder.status) }}
-            </span>
+        <!-- Edit: dva reda sa podacima o nalogu + report dugmici -->
+        <div *ngIf="editingOrder" style="display:flex; align-items:flex-start; justify-content:space-between; flex:1; gap:12px;">
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <!-- Red 1: ID, vozilo, klijent, status -->
+            <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+              <span style="font-size:20px; font-weight:700; color:#f1f5f9;">Nalog #{{ editingOrder.id }}</span>
+              <span style="font-size:16px; font-weight:600; color:#7dd3fc;">{{ getRegistration(editingOrder.vehicleId) }}</span>
+              <span *ngIf="getClientForVehicle(editingOrder.vehicleId)" style="font-size:14px; color:#94a3b8;">{{ getClientForVehicle(editingOrder.vehicleId) }}</span>
+              <span class="badge"
+                [class.badge-open]="editingOrder.status === 'Open'"
+                [class.badge-inprogress]="editingOrder.status === 'InProgress'"
+                [class.badge-closed]="editingOrder.status === 'Closed'">
+                {{ statusLabel(editingOrder.status) }}
+              </span>
+            </div>
+            <!-- Red 2: datum, km, otvoreno -->
+            <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+              <span style="font-size:13px; color:#475569;">
+                <span style="color:#64748b; margin-right:4px;">Datum:</span>
+                <span style="color:#94a3b8;">{{ editingOrder.date | date:'dd.MM.yyyy' }}</span>
+              </span>
+              <span style="font-size:13px; color:#475569;">
+                <span style="color:#64748b; margin-right:4px;">Kilometraža:</span>
+                <span style="color:#94a3b8;">{{ editingOrder.mileage | number }} km</span>
+              </span>
+              <span style="font-size:13px; color:#475569;">
+                <span style="color:#64748b; margin-right:4px;">Otvoreno:</span>
+                <span style="color:#94a3b8;">{{ editingOrder.openedAt | date:'dd.MM.yyyy' }}</span>
+              </span>
+              <span *ngIf="editingOrder.closedAt" style="font-size:13px;">
+                <span style="color:#64748b; margin-right:4px;">Zatvoreno:</span>
+                <span style="color:#94a3b8;">{{ editingOrder.closedAt | date:'dd.MM.yyyy' }}</span>
+              </span>
+            </div>
           </div>
-          <!-- Red 2: datum, km, otvoreno -->
-          <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
-            <span style="font-size:13px; color:#475569;">
-              <span style="color:#64748b; margin-right:4px;">Datum:</span>
-              <span style="color:#94a3b8;">{{ editingOrder.date | date:'dd.MM.yyyy' }}</span>
-            </span>
-            <span style="font-size:13px; color:#475569;">
-              <span style="color:#64748b; margin-right:4px;">Kilometraža:</span>
-              <span style="color:#94a3b8;">{{ editingOrder.mileage | number }} km</span>
-            </span>
-            <span style="font-size:13px; color:#475569;">
-              <span style="color:#64748b; margin-right:4px;">Otvoreno:</span>
-              <span style="color:#94a3b8;">{{ editingOrder.openedAt | date:'dd.MM.yyyy' }}</span>
-            </span>
-            <span *ngIf="editingOrder.closedAt" style="font-size:13px;">
-              <span style="color:#64748b; margin-right:4px;">Zatvoreno:</span>
-              <span style="color:#94a3b8;">{{ editingOrder.closedAt | date:'dd.MM.yyyy' }}</span>
-            </span>
+          <!-- Dugmici za izvestaj -->
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; padding-top:4px;">
+            <div style="display:flex; gap:8px;">
+              <button class="btn" style="padding:5px 14px; background:#1e293b; color:#94a3b8; font-size:12px; border:1px solid #334155;"
+                [disabled]="reportLoading" (click)="copyTxt()">
+                <i class="pi pi-copy"></i> TXT
+              </button>
+              <button class="btn" style="padding:5px 14px; background:#1e293b; color:#7dd3fc; font-size:12px; border:1px solid #334155;"
+                [disabled]="reportLoading" (click)="generatePdf()">
+                <i [class]="reportLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"></i> PDF
+              </button>
+            </div>
+            <span *ngIf="reportMessage" style="font-size:12px; color:#4ade80;">{{ reportMessage }}</span>
           </div>
         </div>
 
@@ -592,6 +609,8 @@ export class ServiceOrdersComponent implements OnInit {
   orderMaterialsLoading = false;
   newMat: { materialId: number | null; quantity: number; pricePerUnit: number } =
     { materialId: null, quantity: 0, pricePerUnit: 0 };
+  reportLoading = false;
+  reportMessage = '';
   editMaterialVisible = false;
   editingMaterialRow: ServiceOrderMaterial | null = null;
 
@@ -931,6 +950,208 @@ export class ServiceOrdersComponent implements OnInit {
   statusLabel(status: string): string {
     const map: Record<string, string> = { Open: 'Otvoreno', InProgress: 'U toku', Closed: 'Zatvoreno' };
     return map[status] ?? status;
+  }
+
+  // ─── Izveštaji ────────────────────────────────────────────
+
+  generatePdf() {
+    if (!this.editingOrder) return;
+    this.reportLoading = true;
+    const order = this.editingOrder;
+    forkJoin({
+      activities: this.api.getActivitiesByOrder(order.id),
+      operations: this.api.getOperationsByOrder(order.id),
+      materials: this.api.getMaterialsByOrder(order.id)
+    }).subscribe({
+      next: ({ activities, operations, materials }) => {
+        this.reportLoading = false;
+        const html = this.buildHtmlReport(order, activities, operations, materials);
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(html);
+          win.document.close();
+          win.focus();
+          setTimeout(() => win.print(), 600);
+        }
+      },
+      error: () => { this.reportLoading = false; }
+    });
+  }
+
+  copyTxt() {
+    if (!this.editingOrder) return;
+    this.reportLoading = true;
+    const order = this.editingOrder;
+    forkJoin({
+      activities: this.api.getActivitiesByOrder(order.id),
+      operations: this.api.getOperationsByOrder(order.id),
+      materials: this.api.getMaterialsByOrder(order.id)
+    }).subscribe({
+      next: ({ activities, operations, materials }) => {
+        this.reportLoading = false;
+        const txt = this.buildTxtReport(order, activities, operations, materials);
+        navigator.clipboard.writeText(txt).then(() => {
+          this.reportMessage = '✓ Kopirano!';
+          setTimeout(() => this.reportMessage = '', 2500);
+        });
+      },
+      error: () => { this.reportLoading = false; }
+    });
+  }
+
+  private buildHtmlReport(
+    order: ServiceOrder,
+    activities: ServiceActivity[],
+    operations: ServiceOrderOperation[],
+    materials: ServiceOrderMaterial[]
+  ): string {
+    const opsTotal = operations.reduce((s, o) => s + o.totalPrice, 0);
+    const matsTotal = materials.reduce((s, m) => s + m.totalPrice, 0);
+    const grandTotal = opsTotal + matsTotal;
+    const reg = this.getRegistration(order.vehicleId);
+    const klijent = this.getClientForVehicle(order.vehicleId);
+    const statusMap: Record<string, string> = { Open: 'Otvoreno', InProgress: 'U toku', Closed: 'Zatvoreno' };
+
+    const activitiesHtml = activities.length
+      ? `<ul>${activities.map(a => `<li>${a.name}</li>`).join('')}</ul>`
+      : '<p class="empty">Nema aktivnosti</p>';
+
+    const operationsHtml = operations.length
+      ? `<table><thead><tr><th>Operacija</th><th class="r">Sati</th><th class="r">Cena/h</th><th class="r">Ukupno</th></tr></thead><tbody>${
+          operations.map(op =>
+            `<tr><td>${op.operationName}</td><td class="r">${op.workHours.toFixed(2)}</td><td class="r">${this.fmt(op.pricePerHour)}</td><td class="r"><b>${this.fmt(op.totalPrice)}</b></td></tr>`
+          ).join('')
+        }<tr class="tot"><td colspan="3" class="r">UKUPNO:</td><td class="r">${this.fmt(opsTotal)}</td></tr></tbody></table>`
+      : '<p class="empty">Nema operacija</p>';
+
+    const materialsHtml = materials.length
+      ? `<table><thead><tr><th>Materijal</th><th>JM</th><th class="r">Količina</th><th class="r">Cena/jm</th><th class="r">Ukupno</th></tr></thead><tbody>${
+          materials.map(m =>
+            `<tr><td>${m.materialName}</td><td>${m.unitOfMeasureName ?? '-'}</td><td class="r">${m.quantity}</td><td class="r">${this.fmt(m.pricePerUnit)}</td><td class="r"><b>${this.fmt(m.totalPrice)}</b></td></tr>`
+          ).join('')
+        }<tr class="tot"><td colspan="4" class="r">UKUPNO:</td><td class="r">${this.fmt(matsTotal)}</td></tr></tbody></table>`
+      : '<p class="empty">Nema materijala</p>';
+
+    return `<!DOCTYPE html>
+<html lang="sr"><head><meta charset="utf-8"><title>Servisni nalog #${order.id}</title>
+<style>
+  *{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:13px;color:#222;margin:36px;max-width:820px}
+  h1{font-size:22px;margin:0 0 2px}
+  .sub{font-size:15px;color:#555;margin-bottom:14px}
+  .meta{display:flex;gap:24px;flex-wrap:wrap;border-bottom:1px solid #ddd;padding-bottom:12px;margin-bottom:20px;font-size:12px}
+  .meta b{color:#888;font-weight:normal;margin-right:4px}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #333;padding-bottom:3px;margin:22px 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
+  th{text-align:left;padding:5px 8px;border-bottom:1px solid #bbb;color:#666;font-size:11px;text-transform:uppercase}
+  td{padding:5px 8px;border-bottom:1px solid #eee}
+  .r{text-align:right}
+  .tot td{font-weight:700;border-top:2px solid #333;border-bottom:none;background:#f5f5f5}
+  ul{padding-left:18px;margin:0 0 8px}li{padding:2px 0}
+  .empty{color:#999;font-style:italic;margin:4px 0}
+  .sum{margin-top:20px;border-top:2px solid #333;padding-top:12px;text-align:right}
+  .sum-row{padding:3px 0;font-size:13px}
+  .sum-grand{font-size:16px;font-weight:700;border-top:1px solid #333;margin-top:6px;padding-top:6px}
+  @media print{body{margin:20px}}
+</style></head><body>
+<h1>Servisni nalog #${order.id}</h1>
+<div class="sub">${reg}${klijent ? ' &mdash; ' + klijent : ''}</div>
+<div class="meta">
+  <span><b>Opis:</b>${order.description}</span>
+  <span><b>Datum servisa:</b>${this.fmtDate(order.date)}</span>
+  <span><b>Kilometraza:</b>${(order.mileage ?? 0).toLocaleString('sr-RS')} km</span>
+  <span><b>Status:</b>${statusMap[order.status] ?? order.status}</span>
+  <span><b>Otvoreno:</b>${this.fmtDate(order.openedAt)}</span>
+  ${order.closedAt ? `<span><b>Zatvoreno:</b>${this.fmtDate(order.closedAt)}</span>` : ''}
+</div>
+<h2>Aktivnosti</h2>${activitiesHtml}
+<h2>Servisne operacije</h2>${operationsHtml}
+<h2>Materijali</h2>${materialsHtml}
+<div class="sum">
+  <div class="sum-row">Ukupno operacije: &nbsp;<b>${this.fmt(opsTotal)}</b></div>
+  <div class="sum-row">Ukupno materijali: &nbsp;<b>${this.fmt(matsTotal)}</b></div>
+  <div class="sum-row sum-grand">UKUPNO: &nbsp;<b>${this.fmt(grandTotal)}</b></div>
+</div>
+</body></html>`;
+  }
+
+  private buildTxtReport(
+    order: ServiceOrder,
+    activities: ServiceActivity[],
+    operations: ServiceOrderOperation[],
+    materials: ServiceOrderMaterial[]
+  ): string {
+    const opsTotal = operations.reduce((s, o) => s + o.totalPrice, 0);
+    const matsTotal = materials.reduce((s, m) => s + m.totalPrice, 0);
+    const grandTotal = opsTotal + matsTotal;
+    const reg = this.getRegistration(order.vehicleId);
+    const klijent = this.getClientForVehicle(order.vehicleId);
+    const statusMap: Record<string, string> = { Open: 'Otvoreno', InProgress: 'U toku', Closed: 'Zatvoreno' };
+    const SEP = '═══════════════════════════════════════════';
+    const sep = '───────────────────────────────────────────';
+
+    const lines: string[] = [
+      SEP,
+      `SERVISNI NALOG #${order.id}`,
+      `Vozilo:  ${reg}`,
+      ...(klijent ? [`Klijent: ${klijent}`] : []),
+      sep,
+      `Opis:           ${order.description}`,
+      `Datum servisa:  ${this.fmtDate(order.date)}`,
+      `Kilometraza:    ${(order.mileage ?? 0).toLocaleString('sr-RS')} km`,
+      `Status:         ${statusMap[order.status] ?? order.status}`,
+      `Otvoreno:       ${this.fmtDate(order.openedAt)}`,
+      ...(order.closedAt ? [`Zatvoreno:      ${this.fmtDate(order.closedAt)}`] : []),
+      SEP,
+      '',
+      'AKTIVNOSTI',
+      sep,
+      ...(activities.length ? activities.map(a => `  • ${a.name}`) : ['  Nema aktivnosti']),
+      '',
+      'SERVISNE OPERACIJE',
+      sep,
+      ...(operations.length
+        ? [
+            ...operations.map(op =>
+              `  • ${op.operationName}  —  ${op.workHours.toFixed(2)} h x ${this.fmt(op.pricePerHour)} = ${this.fmt(op.totalPrice)}`
+            ),
+            `  ${'─'.repeat(41)}`,
+            `  UKUPNO: ${this.fmt(opsTotal)}`
+          ]
+        : ['  Nema operacija']),
+      '',
+      'MATERIJALI',
+      sep,
+      ...(materials.length
+        ? [
+            ...materials.map(m =>
+              `  • ${m.materialName}  —  ${m.quantity} ${m.unitOfMeasureName ?? ''} x ${this.fmt(m.pricePerUnit)} = ${this.fmt(m.totalPrice)}`
+            ),
+            `  ${'─'.repeat(41)}`,
+            `  UKUPNO: ${this.fmt(matsTotal)}`
+          ]
+        : ['  Nema materijala']),
+      '',
+      SEP,
+      `  Ukupno operacije:   ${this.fmt(opsTotal)}`,
+      `  Ukupno materijali:  ${this.fmt(matsTotal)}`,
+      `  ${'─'.repeat(41)}`,
+      `  UKUPNO:             ${this.fmt(grandTotal)}`,
+      SEP,
+    ];
+
+    return lines.join('\n');
+  }
+
+  private fmtDate(s: string | null | undefined): string {
+    if (!s) return '-';
+    try {
+      const d = new Date(s);
+      return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+    } catch { return String(s); }
+  }
+
+  private fmt(n: number): string {
+    return n.toLocaleString('sr-RS', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   private todayStr(): string {
