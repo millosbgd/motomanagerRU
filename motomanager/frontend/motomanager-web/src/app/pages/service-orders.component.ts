@@ -139,12 +139,12 @@ import { forkJoin } from 'rxjs';
           <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; padding-top:4px;">
             <div style="display:flex; gap:8px;">
               <button class="btn" style="padding:5px 14px; background:#1e293b; color:#94a3b8; font-size:12px; border:1px solid #334155;"
-                [disabled]="reportLoading" (click)="copyTxt()">
-                <i class="pi pi-copy"></i> TXT
+                [disabled]="txtLoading" (click)="copyTxt()">
+                <i [class]="txtLoading ? 'pi pi-spin pi-spinner' : 'pi pi-copy'"></i> TXT
               </button>
               <button class="btn" style="padding:5px 14px; background:#1e293b; color:#7dd3fc; font-size:12px; border:1px solid #334155;"
-                [disabled]="reportLoading" (click)="generatePdf()">
-                <i [class]="reportLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"></i> PDF
+                [disabled]="pdfLoading" (click)="generatePdf()">
+                <i [class]="pdfLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"></i> PDF
               </button>
             </div>
             <span *ngIf="reportMessage" style="font-size:12px; color:#4ade80;">{{ reportMessage }}</span>
@@ -635,7 +635,8 @@ export class ServiceOrdersComponent implements OnInit {
   orderMaterialsLoading = false;
   newMat: { materialId: number | null; quantity: number; pricePerUnit: number } =
     { materialId: null, quantity: 0, pricePerUnit: 0 };
-  reportLoading = false;
+  pdfLoading = false;
+  txtLoading = false;
   reportMessage = '';
   txtReportVisible = false;
   txtReportContent = '';
@@ -985,7 +986,7 @@ export class ServiceOrdersComponent implements OnInit {
 
   generatePdf() {
     if (!this.editingOrder) return;
-    this.reportLoading = true;
+    this.pdfLoading = true;
     const order = this.editingOrder;
     forkJoin({
       activities: this.api.getActivitiesByOrder(order.id),
@@ -993,7 +994,7 @@ export class ServiceOrdersComponent implements OnInit {
       materials: this.api.getMaterialsByOrder(order.id)
     }).subscribe({
       next: ({ activities, operations, materials }) => {
-        this.reportLoading = false;
+        this.pdfLoading = false;
         const html = this.buildHtmlReport(order, activities, operations, materials);
         const win = window.open('', '_blank');
         if (win) {
@@ -1003,13 +1004,13 @@ export class ServiceOrdersComponent implements OnInit {
           setTimeout(() => win.print(), 500);
         }
       },
-      error: () => { this.reportLoading = false; }
+      error: () => { this.pdfLoading = false; }
     });
   }
 
   copyTxt() {
     if (!this.editingOrder) return;
-    this.reportLoading = true;
+    this.txtLoading = true;
     const order = this.editingOrder;
     forkJoin({
       activities: this.api.getActivitiesByOrder(order.id),
@@ -1017,12 +1018,12 @@ export class ServiceOrdersComponent implements OnInit {
       materials: this.api.getMaterialsByOrder(order.id)
     }).subscribe({
       next: ({ activities, operations, materials }) => {
-        this.reportLoading = false;
+        this.txtLoading = false;
         this.txtReportContent = this.buildTxtReport(order, activities, operations, materials);
         this.txtCopied = false;
         this.txtReportVisible = true;
       },
-      error: () => { this.reportLoading = false; }
+      error: () => { this.txtLoading = false; }
     });
   }
 
