@@ -11,8 +11,6 @@ import { ServiceOperation } from '../models/material';
 import { ServiceOrderOperation } from '../models/service-order-operation';
 import { ServiceOrderMaterial } from '../models/service-order-material';
 import { forkJoin } from 'rxjs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 @Component({
   standalone: true,
@@ -996,138 +994,17 @@ export class ServiceOrdersComponent implements OnInit {
     }).subscribe({
       next: ({ activities, operations, materials }) => {
         this.reportLoading = false;
-        this.savePdf(order, activities, operations, materials);
+        const html = this.buildHtmlReport(order, activities, operations, materials);
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.write(html);
+          win.document.close();
+          win.focus();
+          setTimeout(() => win.print(), 500);
+        }
       },
       error: () => { this.reportLoading = false; }
     });
-  }
-
-  private async savePdf(
-    order: ServiceOrder,
-    activities: ServiceActivity[],
-    operations: ServiceOrderOperation[],
-    materials: ServiceOrderMaterial[]
-  ) {
-    const opsTotal = operations.reduce((s, o) => s + o.totalPrice, 0);
-    const matsTotal = materials.reduce((s, m) => s + m.totalPrice, 0);
-    const grandTotal = opsTotal + matsTotal;
-    const reg = this.getRegistration(order.vehicleId);
-    const klijent = this.getClientForVehicle(order.vehicleId);
-    const statusMap: Record<string, string> = { Open: 'Otvoreno', InProgress: 'U toku', Closed: 'Zatvoreno' };
-    const doc = new jsPDF();
-    let y = 20;
-
-    // Header
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Servisni nalog #${order.id}`, 14, y); y += 8;
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${reg}${klijent ? '  —  ' + klijent : ''}`, 14, y); y += 8;
-
-    // Meta
-    doc.setFontSize(9);
-    doc.setTextColor(100);
-    const metaLines = [
-      `Opis: ${order.description}`,
-      `Datum servisa: ${this.fmtDate(order.date)}   Kilometraza: ${(order.mileage ?? 0).toLocaleString('sr-RS')} km   Status: ${statusMap[order.status] ?? order.status}`,
-      `Otvoreno: ${this.fmtDate(order.openedAt)}` + (order.closedAt ? `   Zatvoreno: ${this.fmtDate(order.closedAt)}` : '')
-    ];
-    metaLines.forEach(l => { doc.text(l, 14, y); y += 5; });
-    doc.setTextColor(0); y += 4;
-
-    // Aktivnosti
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('AKTIVNOSTI', 14, y); y += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    if (activities.length) {
-      activities.forEach(a => { doc.text(`\u2022  ${a.name}`, 18, y); y += 5; });
-    } else {
-      doc.setTextColor(150); doc.text('Nema aktivnosti', 18, y); doc.setTextColor(0); y += 5;
-    }
-    y += 4;
-
-    // Operacije
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SERVISNE OPERACIJE', 14, y); y += 3;
-    autoTable(doc, {
-      startY: y,
-      head: [['Operacija', 'Sati', 'Cena/h', 'Ukupno']],
-      body: [
-        ...operations.map(op => [op.operationName, op.workHours.toFixed(2), this.fmt(op.pricePerHour), this.fmt(op.totalPrice)]),
-        ...(operations.length ? [['', '', 'UKUPNO:', this.fmt(opsTotal)]] : [['', '', '', 'Nema operacija']])
-      ],
-      headStyles: { fillColor: [30, 41, 59], fontSize: 8, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 8 },
-      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
-      styles: { cellPadding: 3 },
-      didParseCell: (d: any) => {
-        if (d.row.index === operations.length && operations.length > 0) {
-          d.cell.styles.fontStyle = 'bold';
-          d.cell.styles.fillColor = [245, 245, 245];
-          d.cell.styles.textColor = [0, 0, 0];
-        }
-      }
-    });
-    y = (doc as any).lastAutoTable.finalY + 6;
-
-    // Materijali
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('MATERIJALI', 14, y); y += 3;
-    autoTable(doc, {
-      startY: y,
-      head: [['Materijal', 'JM', 'Kolicina', 'Cena/jm', 'Ukupno']],
-      body: [
-        ...materials.map(m => [m.materialName, m.unitOfMeasureName ?? '-', String(m.quantity), this.fmt(m.pricePerUnit), this.fmt(m.totalPrice)]),
-        ...(materials.length ? [['', '', '', 'UKUPNO:', this.fmt(matsTotal)]] : [['', '', '', '', 'Nema materijala']])
-      ],
-      headStyles: { fillColor: [30, 41, 59], fontSize: 8, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 8 },
-      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
-      styles: { cellPadding: 3 },
-      didParseCell: (d: any) => {
-        if (d.row.index === materials.length && materials.length > 0) {
-          d.cell.styles.fontStyle = 'bold';
-          d.cell.styles.fillColor = [245, 245, 245];
-          d.cell.styles.textColor = [0, 0, 0];
-        }
-      }
-    });
-    y = (doc as any).lastAutoTable.finalY + 8;
-
-    // Grand total
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(80);
-    doc.text(`Ukupno operacije: ${this.fmt(opsTotal)}`, 130, y, { align: 'right' }); y += 5;
-    doc.text(`Ukupno materijali: ${this.fmt(matsTotal)}`, 130, y, { align: 'right' }); y += 2;
-    doc.setDrawColor(0); doc.line(100, y, 130, y); y += 4;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0);
-    doc.text(`UKUPNO: ${this.fmt(grandTotal)}`, 130, y, { align: 'right' });
-
-    const filename = `nalog-${order.id}-${reg.replace(/\s+/g, '_')}.pdf`;
-    if ('showSaveFilePicker' in window) {
-      try {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: filename,
-          types: [{ description: 'PDF fajl', accept: { 'application/pdf': ['.pdf'] } }]
-        });
-        const blob = doc.output('blob');
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        return;
-      } catch (e: any) {
-        if (e?.name === 'AbortError') return; // korisnik je odustao
-      }
-    }
-    doc.save(filename);
   }
 
   copyTxt() {
